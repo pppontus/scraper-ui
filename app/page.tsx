@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import mockData from "@/lib/mock-data.json";
 import { formatCost } from "@/lib/utils";
+import { KpiCard } from "@/components/ui/KpiCard";
 
 export default function Dashboard() {
   const [timeRange, setTimeRange] = useState("24h");
@@ -60,28 +61,28 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
+        <KpiCard
           title="Active Gigs"
           value={stats.activeGigs}
           icon={Activity}
           trend={null}
           color="blue"
         />
-        <KPICard
+        <KpiCard
           title="Added (24h)"
           value={stats.added24h}
           icon={TrendingUp}
           trend="+15%"
           color="green"
         />
-        <KPICard
+        <KpiCard
           title="Deleted (24h)"
           value={stats.deleted24h}
           icon={TrendingDown}
           trend="-8%"
           color="red"
         />
-        <KPICard
+        <KpiCard
           title="Error Rate (24h)"
           value={`${(stats.errorRate24h * 100).toFixed(1)}%`}
           icon={AlertCircle}
@@ -91,14 +92,14 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <KPICard
+        <KpiCard
           title="Avg Run Time (7d)"
           value={`${stats.avgRunTime7d}s`}
           icon={Clock}
           trend="Normal"
           color="blue"
         />
-        <KPICard
+        <KpiCard
           title={`LLM Cost (${timeRange})`}
           value={formatCost(timeRange === "24h" ? stats.llmCost24h : stats.llmCost7d)}
           icon={DollarSign}
@@ -237,45 +238,4 @@ export default function Dashboard() {
   );
 }
 
-interface KPICardProps {
-  title: string;
-  value: string | number;
-  icon: React.ElementType;
-  trend: string | null;
-  color: "blue" | "green" | "red" | "purple";
-}
-
-function KPICard({ title, value, icon: Icon, trend, color }: KPICardProps) {
-  const colorClasses = {
-    blue: "bg-blue-50 text-blue-600",
-    green: "bg-green-50 text-green-600",
-    red: "bg-red-50 text-red-600",
-    purple: "bg-purple-50 text-purple-600",
-  };
-
-  const trendColorClasses = {
-    blue: "text-blue-600",
-    green: "text-green-600",
-    red: "text-red-600",
-    purple: "text-purple-600",
-  };
-
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-600">{title}</span>
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="h-4 w-4" />
-        </div>
-      </div>
-      <div className="flex items-baseline justify-between">
-        <span className="text-2xl font-bold text-gray-900">{value}</span>
-        {trend && (
-          <span className={`text-sm font-medium ${trendColorClasses[color]}`}>
-            {trend}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
+// KPI card moved to components/ui/KpiCard

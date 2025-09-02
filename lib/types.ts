@@ -72,6 +72,16 @@ export interface DiscoveryConfig {
 }
 
 export interface ExtractionConfig {
+  // Optional API-based extraction configuration (for API technique)
+  api?: {
+    endpoint: string;
+    method: string;
+    headers: Record<string, string>;
+    auth: AuthConfig;
+    baseUrl?: string;
+    // Fields the user picked as relevant for extraction (JSONPath-like paths)
+    responseFields?: Array<{ key: string; path: string }>;
+  };
   // Navigation to detail page
   navigation: {
     type: "direct" | "transform" | "api";
@@ -246,15 +256,19 @@ export interface TestResults {
   };
   extraction?: {
     success: boolean;
-    samples: Array<{
+    artifacts: Array<{
       url: string;
-      data: Record<string, any>;
+      request: string; // curl or GET URL
+      responsePreview?: string; // lightweight info about response
+      markdown?: string; // for HTML/JS extraction
+      fields?: Record<string, any>; // for API extraction
       errors?: string[];
     }>;
     duration: number;
     timestamp: Date;
-    fieldCompleteness: Record<string, number>;
   };
+  // URLs user queued from discovery to preview in extraction setup
+  previewQueue?: string[];
 }
 
 export interface SourceConfig {

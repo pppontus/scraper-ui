@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { LOCALE, TIMEZONE, CURRENCY } from "@/lib/constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -7,8 +8,8 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatTimestamp(date: string | Date) {
   const d = new Date(date)
-  return new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Europe/Stockholm',
+  return new Intl.DateTimeFormat(LOCALE, {
+    timeZone: TIMEZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -18,9 +19,9 @@ export function formatTimestamp(date: string | Date) {
 }
 
 export function formatCost(cost: number) {
-  return new Intl.NumberFormat('sv-SE', {
+  return new Intl.NumberFormat(LOCALE, {
     style: 'currency',
-    currency: 'SEK',
+    currency: CURRENCY,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(cost)

@@ -442,14 +442,14 @@ export function ApiTestAndSelection({ config, setConfig }: ApiTestAndSelectionPr
                           <span className="font-medium text-green-900">Sample URLs found:</span>
                         </div>
                         <div className="space-y-1">
-                          {currentUrls.slice(0, 3).map((url: string, index: number) => (
+                          {currentUrls.slice(0, 5).map((url: string, index: number) => (
                             <div key={index} className="text-sm font-mono text-green-800 break-all">
                               {url}
                             </div>
                           ))}
-                          {currentUrls.length > 3 && (
+                          {currentUrls.length > 5 && (
                             <div className="text-sm text-green-700">
-                              ... and {currentUrls.length - 3} more URLs
+                              ... and {currentUrls.length - 5} more URLs
                             </div>
                           )}
                         </div>

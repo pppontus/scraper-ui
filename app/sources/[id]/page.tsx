@@ -25,7 +25,8 @@ import {
   Search
 } from "lucide-react";
 import mockData from "@/lib/mock-data.json";
-import { formatTimestamp, formatCost, getStatusColor, cn } from "@/lib/utils";
+import { formatTimestamp, formatCost, cn } from "@/lib/utils";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 type TabId = "overview" | "discovery" | "extraction" | "llm" | "save" | "schedule" | "logs" | "history";
 
@@ -101,12 +102,7 @@ export default function SourceDetailPage({ params }: { params: { id: string } })
             <div>
               <h1 className="text-xl font-bold text-gray-900">{source.name}</h1>
               <div className="flex items-center gap-3 mt-1">
-                <span className={cn(
-                  "inline-flex px-2 py-0.5 text-xs font-medium rounded-full",
-                  getStatusColor(source.status)
-                )}>
-                  {source.status}
-                </span>
+                <StatusBadge status={source.status} className="py-0.5" />
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <Search className="h-3 w-3 text-gray-500" />
@@ -292,12 +288,7 @@ function OverviewTab({ source, recentRuns }: any) {
           {recentRuns.slice(0, 3).map((run: any) => (
             <div key={run.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-4">
-                <span className={cn(
-                  "inline-flex px-2 py-1 text-xs font-medium rounded-full",
-                  getStatusColor(run.status)
-                )}>
-                  {run.status}
-                </span>
+                <StatusBadge status={run.status} />
                 <div>
                   <div className="text-sm font-medium">{formatTimestamp(run.startTime)}</div>
                   <div className="text-xs text-gray-500">Duration: {run.duration}s</div>
@@ -974,12 +965,7 @@ function HistoryTab({ runs }: any) {
                   {formatTimestamp(run.startTime)}
                 </td>
                 <td className="px-6 py-4">
-                  <span className={cn(
-                    "inline-flex px-2 py-1 text-xs font-medium rounded-full",
-                    getStatusColor(run.status)
-                  )}>
-                    {run.status}
-                  </span>
+                  <StatusBadge status={run.status} />
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
                   {run.duration}s

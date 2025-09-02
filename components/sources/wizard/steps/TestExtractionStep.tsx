@@ -11,67 +11,64 @@ interface TestExtractionStepProps {
 export function TestExtractionStep({ config, setConfig }: TestExtractionStepProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
-  
+
   const discoveredUrls = config.testResults?.discovery?.urls || [];
   const testResults = config.testResults?.extraction;
-  
+
   const runTest = async () => {
     setIsRunning(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    const mockResults = {
-      success: true,
-      samples: selectedUrls.slice(0, 3).map((url, index) => ({
-        url,
-        data: {
-          title: `Senior ${index === 0 ? 'Frontend' : index === 1 ? 'Backend' : 'Full Stack'} Developer`,
-          company: index === 0 ? 'TechCorp AB' : index === 1 ? 'DevStudio' : 'StartupXYZ',
-          location: 'Stockholm, Sweden',
-          description: `Exciting opportunity for a ${index === 0 ? 'frontend' : index === 1 ? 'backend' : 'full stack'} developer to join our growing team. We offer competitive salary, flexible working hours, and great benefits.`,
-          requirements: [
-            `5+ years ${index === 0 ? 'React' : index === 1 ? 'Node.js' : 'JavaScript'} experience`,
-            'Strong problem-solving skills',
-            'Team player with good communication'
-          ],
-          salary: index === 0 ? '45000-55000 SEK' : index === 1 ? '50000-60000 SEK' : '40000-50000 SEK',
-          deadline: '2024-09-30'
-        },
-        errors: []
-      })),
-      duration: 3000,
-      timestamp: new Date(),
-      fieldCompleteness: {
-        title: 1.0,
-        company: 1.0,
-        location: 1.0,
-        description: 1.0,
-        requirements: 0.8,
-        salary: 0.6,
-        deadline: 0.4
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    const artifacts = selectedUrls.slice(0, 3).map((url) => {
+      if (config.extraction.technique === "api") {
+        const fields = Object.fromEntries(
+          (config.extraction.config.api?.responseFields || []).map((f: any) => [
+            f.key,
+            `<value from ${f.path}>`,
+          ])
+        );
+        const request = `curl -X ${config.extraction.config.api?.method || "GET"} '${
+          config.extraction.config.api?.endpoint || "https://api.example.com/jobs"
+        }'`;
+        return {
+          url,
+          request,
+          responsePreview: `HTTP 200 • JSON body with ${Object.keys(fields).length} selected fields`,
+          fields,
+        };
+      } else {
+        const request = `GET ${url}`;
+        const markdown = `# Job Details\n\nURL: ${url}\n\n**Title:** Example Title\n**Company:** Example Company\n\n## Description\nRendered content from main content area...`;
+        return {
+          url,
+          request,
+          responsePreview: `HTTP 200 • 25KB HTML • rendered 2.1s`,
+          markdown,
+        };
       }
-    };
-    
+    });
+
     setConfig({
       ...config,
       testResults: {
         ...config.testResults,
-        extraction: mockResults
-      }
+        extraction: {
+          success: true,
+          artifacts,
+          duration: 1200,
+          timestamp: new Date(),
+        },
+      },
     });
-    
     setIsRunning(false);
   };
-  
+
   const handleUrlToggle = (url: string) => {
-    setSelectedUrls(prev => 
-      prev.includes(url)
-        ? prev.filter(u => u !== url)
-        : [...prev, url]
+    setSelectedUrls((prev) =>
+      prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]
     );
   };
-  
+
   if (!config.testResults?.discovery) {
     return (
       <div className="space-y-6">
@@ -87,7 +84,7 @@ export function TestExtractionStep({ config, setConfig }: TestExtractionStepProp
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -96,7 +93,7 @@ export function TestExtractionStep({ config, setConfig }: TestExtractionStepProp
             <Eye className="h-5 w-5 text-blue-600" />
             <h2 className="text-lg font-semibold text-gray-900">Test Extraction</h2>
           </div>
-          
+
           <button
             onClick={runTest}
             disabled={isRunning || selectedUrls.length === 0}
@@ -120,25 +117,23 @@ export function TestExtractionStep({ config, setConfig }: TestExtractionStepProp
             )}
           </button>
         </div>
-        
+
         <p className="text-gray-600 mb-6">
-          Select URLs from your discovery test to validate data extraction.
+          Select URLs from your discovery test to fetch detail pages (HTML/JS) or relevant API fields (API).
         </p>
-        
+
         {!testResults && (
           <div className="space-y-4">
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
-                <span className="text-sm font-medium text-yellow-800">
-                  Test Required
-                </span>
+                <span className="text-sm font-medium text-yellow-800">Test Required</span>
               </div>
               <p className="text-sm text-yellow-700 mt-1">
                 Select some URLs and run extraction test to validate your configuration.
               </p>
             </div>
-            
+
             <div className="border border-gray-200 rounded-lg">
               <div className="p-4 border-b border-gray-200">
                 <h3 className="font-medium text-gray-900">Select URLs to Test</h3>
@@ -159,13 +154,9 @@ export function TestExtractionStep({ config, setConfig }: TestExtractionStepProp
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {metadata?.title || `Job ${index + 1}`}
                         </p>
-                        <p className="text-xs text-blue-600 hover:text-blue-800 truncate">
-                          {url}
-                        </p>
+                        <p className="text-xs text-blue-600 hover:text-blue-800 truncate">{url}</p>
                       </div>
-                      <span className="text-xs text-gray-500 ml-2">
-                        {metadata?.date}
-                      </span>
+                      <span className="text-xs text-gray-500 ml-2">{metadata?.date}</span>
                     </label>
                   );
                 })}
@@ -173,124 +164,58 @@ export function TestExtractionStep({ config, setConfig }: TestExtractionStepProp
             </div>
           </div>
         )}
-        
+
         {testResults && (
           <div className="space-y-4">
-            <div className={cn(
-              "border rounded-lg p-4",
-              testResults.success
-                ? "bg-green-50 border-green-200"
-                : "bg-red-50 border-red-200"
-            )}>
+            <div
+              className={cn(
+                "border rounded-lg p-4",
+                testResults.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+              )}
+            >
               <div className="flex items-center gap-2 mb-2">
                 {testResults.success ? (
                   <CheckCircle className="h-4 w-4 text-green-600" />
                 ) : (
                   <AlertCircle className="h-4 w-4 text-red-600" />
                 )}
-                <span className={cn(
-                  "text-sm font-medium",
-                  testResults.success ? "text-green-800" : "text-red-800"
-                )}>
-                  {testResults.success ? "Extraction Successful" : "Extraction Failed"}
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    testResults.success ? "text-green-800" : "text-red-800"
+                  )}
+                >
+                  Extraction {testResults.success ? "Successful" : "Failed"}
+                </span>
+                <span className="text-xs text-gray-600 ml-auto">
+                  {new Date(testResults.timestamp).toLocaleTimeString()}
                 </span>
               </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Samples:</span>
-                  <div className="font-medium">{testResults.samples.length}</div>
-                </div>
-                <div>
-                  <span className="text-gray-600">Duration:</span>
-                  <div className="font-medium">{testResults.duration}ms</div>
-                </div>
-                <div>
-                  <span className="text-gray-600">Avg Fields:</span>
-                  <div className="font-medium">
-                    {Math.round(Object.values(testResults.fieldCompleteness).reduce((a: number, b: number) => a + b, 0) / Object.keys(testResults.fieldCompleteness).length * 100)}%
-                  </div>
-                </div>
-                <div>
-                  <span className="text-gray-600">Timestamp:</span>
-                  <div className="font-medium">{new Date(testResults.timestamp).toLocaleTimeString()}</div>
-                </div>
-              </div>
             </div>
-            
-            {/* Field Completeness */}
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-3">Field Completeness</h3>
-              <div className="space-y-2">
-                {Object.entries(testResults.fieldCompleteness).map(([field, completeness]) => (
-                  <div key={field} className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700 w-24 capitalize">{field}:</span>
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={cn(
-                          "h-2 rounded-full transition-all",
-                          completeness >= 0.8 ? "bg-green-500" :
-                          completeness >= 0.5 ? "bg-yellow-500" : "bg-red-500"
-                        )}
-                        style={{ width: `${completeness * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-sm text-gray-600 w-12">
-                      {Math.round(completeness * 100)}%
-                    </span>
+
+            <div className="space-y-3">
+              {testResults.artifacts.map((a, i) => (
+                <div key={i} className="border rounded p-3 bg-white">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium text-gray-900 truncate">{a.url}</div>
+                    <div className="text-xs text-gray-500">{a.responsePreview}</div>
                   </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Sample Results */}
-            <div className="border border-gray-200 rounded-lg">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="font-medium text-gray-900">Extracted Samples</h3>
-                <p className="text-sm text-gray-600">Preview of extracted job data</p>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {testResults.samples.map((sample: any, index: number) => (
-                  <div key={index} className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-medium text-gray-900">{sample.data.title}</h4>
-                      <span className="text-xs text-gray-500">{sample.data.company}</span>
+                  <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <div className="text-xs font-medium text-gray-700 mb-1">Request</div>
+                      <div className="bg-gray-50 border rounded p-2 font-mono text-[11px] whitespace-pre-wrap break-all">{a.request}</div>
                     </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600">Location:</span>
-                        <div className="font-medium">{sample.data.location || 'N/A'}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Salary:</span>
-                        <div className="font-medium">{sample.data.salary || 'N/A'}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Requirements:</span>
-                        <div className="font-medium">{sample.data.requirements?.length || 0} items</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Deadline:</span>
-                        <div className="font-medium">{sample.data.deadline || 'N/A'}</div>
-                      </div>
+                    <div className="md:col-span-2">
+                      <div className="text-xs font-medium text-gray-700 mb-1">Artifact</div>
+                      {a.markdown ? (
+                        <div className="bg-gray-50 border rounded p-2 font-mono text-[11px] whitespace-pre-wrap max-h-40 overflow-auto">{a.markdown}</div>
+                      ) : (
+                        <div className="bg-gray-50 border rounded p-2 font-mono text-[11px] whitespace-pre-wrap max-h-40 overflow-auto">{JSON.stringify(a.fields, null, 2)}</div>
+                      )}
                     </div>
-                    
-                    <div className="mt-3">
-                      <span className="text-gray-600">Description:</span>
-                      <p className="text-sm text-gray-800 mt-1 line-clamp-2">
-                        {sample.data.description}
-                      </p>
-                    </div>
-                    
-                    <p className="text-xs text-blue-600 hover:text-blue-800 mt-2 truncate">
-                      <a href={sample.url} target="_blank" rel="noopener noreferrer">
-                        {sample.url}
-                      </a>
-                    </p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

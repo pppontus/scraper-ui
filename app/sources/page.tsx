@@ -17,7 +17,8 @@ import {
   FileText
 } from "lucide-react";
 import mockData from "@/lib/mock-data.json";
-import { formatTimestamp, formatCost, getStatusColor, cn } from "@/lib/utils";
+import { formatTimestamp, formatCost, cn } from "@/lib/utils";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export default function SourcesPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -203,12 +204,7 @@ export default function SourcesPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={cn(
-                      "inline-flex px-2 py-1 text-xs font-medium rounded-full",
-                      getStatusColor(source.status)
-                    )}>
-                      {source.status}
-                    </span>
+                    <StatusBadge status={source.status} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {formatTimestamp(source.lastRun)}
