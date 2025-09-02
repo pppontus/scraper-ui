@@ -1,0 +1,352 @@
+{
+  "sources": [
+    {
+      "id": "src_1",
+      "name": "Arbetsförmedlingen",
+      "discoveryTechnique": "html",
+      "extractionTechnique": "js",
+      "status": "running",
+      "siteUrl": "https://allakonsultuppdrag.se/arbetsformedlingen",
+      "lastRun": "2024-08-30T14:23:00+02:00",
+      "nextRun": "2024-08-30T20:00:00+02:00",
+      "activeGigs": 127,
+      "added24h": 12,
+      "deleted24h": 3,
+      "errorCount": 0,
+      "llmCost24h": 2.34,
+      "llmCost7d": 18.92,
+      "avgRunTime": 45,
+      "config": {
+        "discovery": {
+          "mode": "HTML",
+          "pagination": "numbered",
+          "selectors": {
+            "list": ".job-listing",
+            "title": ".job-title",
+            "url": "a.job-link",
+            "date": ".posted-date"
+          },
+          "scrollStrategy": null,
+          "includeRegions": [".main-content"],
+          "excludeRegions": [".sidebar", ".footer"],
+          "pageInteraction": {
+            "waitFor": ".job-listing",
+            "clickScript": null,
+            "cookieHandler": "button.accept-cookies"
+          }
+        },
+        "details": {
+          "navigation": "direct",
+          "rendering": "headless",
+          "timeout": 30000,
+          "waitFor": ".job-description",
+          "contentSelection": {
+            "targetElements": [".job-content", ".job-requirements"],
+            "includeElements": [],
+            "excludeElements": [".related-jobs", ".ads"],
+            "wordCountThreshold": 100
+          }
+        },
+        "llmParsing": {
+          "template": "standard_job",
+          "model": "gpt-5-mini",
+          "temperature": 0.3,
+          "maxTokens": 2000,
+          "retries": 3,
+          "schema": {
+            "title": "string",
+            "company": "string",
+            "location": "string",
+            "description": "string",
+            "requirements": "array",
+            "salary": "string?",
+            "deadline": "date?"
+          }
+        },
+        "save": {
+          "upsertKeys": ["siteUrl", "jobUrl"],
+          "softDeleteRules": {
+            "textMatches": ["no longer accepting", "position filled"],
+            "colorChange": "#999999",
+            "missing": true
+          }
+        },
+        "schedule": {
+          "type": "cron",
+          "expression": "0 */6 * * *",
+          "rateLimit": 10,
+          "concurrency": 2
+        }
+      },
+      "activeGigRules": {
+        "closedIndicators": ["no longer accepting applicants", "tjänsten är tillsatt"],
+        "deletionDetection": true,
+        "colorChange": "#cccccc"
+      }
+    },
+    {
+      "id": "src_2",
+      "name": "Konsultuppdrag.se",
+      "discoveryTechnique": "js",
+      "extractionTechnique": "html",
+      "status": "idle",
+      "siteUrl": "https://www.konsultuppdrag.se",
+      "lastRun": "2024-08-30T12:00:00+02:00",
+      "nextRun": "2024-08-30T18:00:00+02:00",
+      "activeGigs": 89,
+      "added24h": 8,
+      "deleted24h": 5,
+      "errorCount": 2,
+      "llmCost24h": 1.87,
+      "llmCost7d": 14.23,
+      "avgRunTime": 62
+    },
+    {
+      "id": "src_3",
+      "name": "LinkedIn Jobs API",
+      "discoveryTechnique": "api",
+      "extractionTechnique": "api",
+      "status": "failed",
+      "siteUrl": "https://api.linkedin.com/jobs",
+      "lastRun": "2024-08-30T10:15:00+02:00",
+      "nextRun": "2024-08-30T16:15:00+02:00",
+      "activeGigs": 0,
+      "added24h": 0,
+      "deleted24h": 0,
+      "errorCount": 5,
+      "llmCost24h": 0,
+      "llmCost7d": 8.45,
+      "avgRunTime": 12
+    },
+    {
+      "id": "src_4",
+      "name": "Indeed Sverige",
+      "discoveryTechnique": "html",
+      "extractionTechnique": "html",
+      "status": "scheduled",
+      "siteUrl": "https://se.indeed.com",
+      "lastRun": "2024-08-30T08:00:00+02:00",
+      "nextRun": "2024-08-30T16:00:00+02:00",
+      "activeGigs": 234,
+      "added24h": 28,
+      "deleted24h": 15,
+      "errorCount": 0,
+      "llmCost24h": 4.56,
+      "llmCost7d": 31.20,
+      "avgRunTime": 89
+    },
+    {
+      "id": "src_5",
+      "name": "Stepstone",
+      "discoveryTechnique": "js",
+      "extractionTechnique": "js",
+      "status": "paused",
+      "siteUrl": "https://www.stepstone.se",
+      "lastRun": "2024-08-29T22:00:00+02:00",
+      "nextRun": null,
+      "activeGigs": 156,
+      "added24h": 0,
+      "deleted24h": 0,
+      "errorCount": 0,
+      "llmCost24h": 0,
+      "llmCost7d": 22.10,
+      "avgRunTime": 72
+    },
+    {
+      "id": "src_6",
+      "name": "Jobbsafari",
+      "discoveryTechnique": "rss",
+      "extractionTechnique": "html",
+      "status": "disabled",
+      "siteUrl": "https://www.jobbsafari.se",
+      "lastRun": "2024-08-25T18:00:00+02:00",
+      "nextRun": null,
+      "activeGigs": 0,
+      "added24h": 0,
+      "deleted24h": 0,
+      "errorCount": 0,
+      "llmCost24h": 0,
+      "llmCost7d": 0,
+      "avgRunTime": 38
+    }
+  ],
+  "runs": [
+    {
+      "id": "run_1",
+      "sourceId": "src_1",
+      "sourceName": "Arbetsförmedlingen",
+      "startTime": "2024-08-30T14:23:00+02:00",
+      "endTime": "2024-08-30T14:23:45+02:00",
+      "duration": 45,
+      "status": "completed",
+      "itemsFound": 145,
+      "itemsUpdated": 12,
+      "itemsDeleted": 3,
+      "errors": [],
+      "llmCost": 0.45,
+      "steps": {
+        "discovery": {
+          "status": "completed",
+          "duration": 12,
+          "urlsFound": 145,
+          "errors": []
+        },
+        "details": {
+          "status": "completed",
+          "duration": 18,
+          "pagesProcessed": 145,
+          "errors": []
+        },
+        "llmParsing": {
+          "status": "completed",
+          "duration": 10,
+          "itemsParsed": 145,
+          "errors": []
+        },
+        "save": {
+          "status": "completed",
+          "duration": 5,
+          "itemsSaved": 145,
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "run_2",
+      "sourceId": "src_2",
+      "sourceName": "Konsultuppdrag.se",
+      "startTime": "2024-08-30T12:00:00+02:00",
+      "endTime": "2024-08-30T12:01:02+02:00",
+      "duration": 62,
+      "status": "partial",
+      "itemsFound": 94,
+      "itemsUpdated": 8,
+      "itemsDeleted": 5,
+      "errors": [
+        {
+          "step": "details",
+          "message": "Timeout waiting for selector .job-details on 2 pages",
+          "timestamp": "2024-08-30T12:00:45+02:00"
+        }
+      ],
+      "llmCost": 0.38
+    },
+    {
+      "id": "run_3",
+      "sourceId": "src_3",
+      "sourceName": "LinkedIn Jobs API",
+      "startTime": "2024-08-30T10:15:00+02:00",
+      "endTime": "2024-08-30T10:15:12+02:00",
+      "duration": 12,
+      "status": "failed",
+      "itemsFound": 0,
+      "itemsUpdated": 0,
+      "itemsDeleted": 0,
+      "errors": [
+        {
+          "step": "discovery",
+          "message": "API rate limit exceeded",
+          "timestamp": "2024-08-30T10:15:02+02:00"
+        }
+      ],
+      "llmCost": 0
+    },
+    {
+      "id": "run_4",
+      "sourceId": "src_4",
+      "sourceName": "Indeed Sverige",
+      "startTime": "2024-08-30T08:00:00+02:00",
+      "endTime": "2024-08-30T08:01:29+02:00",
+      "duration": 89,
+      "status": "completed",
+      "itemsFound": 267,
+      "itemsUpdated": 28,
+      "itemsDeleted": 15,
+      "errors": [],
+      "llmCost": 0.92
+    }
+  ],
+  "statistics": {
+    "dashboard": {
+      "activeGigs": 606,
+      "activeGigsBySite": [
+        { "name": "Indeed Sverige", "count": 234 },
+        { "name": "Stepstone", "count": 156 },
+        { "name": "Arbetsförmedlingen", "count": 127 },
+        { "name": "Konsultuppdrag.se", "count": 89 }
+      ],
+      "added24h": 48,
+      "deleted24h": 23,
+      "errorRate24h": 0.12,
+      "avgRunTime7d": 56,
+      "llmCost24h": 9.12,
+      "llmCost7d": 105.1
+    },
+    "hourlyActivity": [
+      { "time": "00:00", "added": 2, "deleted": 1 },
+      { "time": "01:00", "added": 1, "deleted": 0 },
+      { "time": "02:00", "added": 0, "deleted": 0 },
+      { "time": "03:00", "added": 0, "deleted": 0 },
+      { "time": "04:00", "added": 0, "deleted": 0 },
+      { "time": "05:00", "added": 0, "deleted": 0 },
+      { "time": "06:00", "added": 3, "deleted": 2 },
+      { "time": "07:00", "added": 5, "deleted": 1 },
+      { "time": "08:00", "added": 8, "deleted": 4 },
+      { "time": "09:00", "added": 6, "deleted": 3 },
+      { "time": "10:00", "added": 4, "deleted": 2 },
+      { "time": "11:00", "added": 3, "deleted": 2 },
+      { "time": "12:00", "added": 5, "deleted": 3 },
+      { "time": "13:00", "added": 4, "deleted": 2 },
+      { "time": "14:00", "added": 7, "deleted": 3 }
+    ],
+    "errorsBySources": [
+      { "name": "LinkedIn Jobs API", "errors": 5 },
+      { "name": "Konsultuppdrag.se", "errors": 2 }
+    ],
+    "costBySources": [
+      { "name": "Indeed Sverige", "cost": 4.56 },
+      { "name": "Arbetsförmedlingen", "cost": 2.34 },
+      { "name": "Konsultuppdrag.se", "cost": 1.87 },
+      { "name": "LinkedIn Jobs API", "cost": 0 },
+      { "name": "Stepstone", "cost": 0 }
+    ]
+  },
+  "settings": {
+    "notifications": {
+      "channels": {
+        "slack": {
+          "enabled": true,
+          "webhook": "https://hooks.slack.com/services/XXX",
+          "channel": "#scraper-alerts"
+        },
+        "email": {
+          "enabled": false,
+          "to": "pontus@example.com"
+        }
+      },
+      "events": {
+        "failures": true,
+        "zeroNewItems": true,
+        "errorSpikes": true,
+        "schemaViolations": true
+      },
+      "rateLimit": {
+        "maxPerHour": 10,
+        "cooldown": 30
+      }
+    },
+    "defaults": {
+      "model": "gpt-5-mini",
+      "temperature": 0.3,
+      "maxTokens": 2000,
+      "schedule": "0 */6 * * *",
+      "includeRegions": [".main-content", ".content", "main"],
+      "excludeRegions": [".nav", ".footer", ".sidebar", ".ads"],
+      "costCapWarning": 50
+    },
+    "auth": {
+      "enabled": true,
+      "networkRestriction": "192.168.1.0/24"
+    }
+  }
+}
