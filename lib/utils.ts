@@ -85,7 +85,7 @@ export function parseCurl(curlCommand: string): ParsedCurl | null {
     const cookies = cookieMatch ? cookieMatch[1] : undefined;
     
     // Extract body data
-    const bodyMatch = cleanCurl.match(/--data(?:-raw)?\s+['"](.*?)['"]/s);
+    const bodyMatch = cleanCurl.match(/--data(?:-raw)?\s+['"]([\s\S]*?)['"]/);
     const body = bodyMatch ? bodyMatch[1] : undefined;
     
     return {

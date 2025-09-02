@@ -49,8 +49,8 @@ export function BasicsStep({ config, setConfig }: BasicsStepProps) {
               <span className="font-medium text-blue-900">Two-Step Scraping Approach</span>
             </div>
             <p className="text-sm text-blue-700">
-              This scraper uses a two-step approach: first <strong>Discovery</strong> finds job URLs, 
-              then <strong>Extraction</strong> gets details from each job page. You'll configure the 
+              This scraper uses a two-step approach: first <strong>find jobs</strong> by discovering URLs, 
+              then <strong>extract details</strong> from each job page. You'll configure the 
               technique for each step separately.
             </p>
           </div>

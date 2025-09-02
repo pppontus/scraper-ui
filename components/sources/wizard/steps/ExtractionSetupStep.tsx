@@ -76,54 +76,90 @@ export function ExtractionSetupStep({ config, setConfig }: ExtractionSetupStepPr
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-4">
           <FileText className="h-5 w-5 text-blue-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Extraction Configuration</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Extract Details</h2>
         </div>
         
-        <p className="text-gray-600 mb-6">
-          Configure how to extract job details from individual job pages.
-        </p>
-        
-        {/* Technique Selection */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Extraction Technique
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {(["api", "html", "js"] as ExtractionTechnique[]).map((tech) => (
-              <button
-                key={tech}
-                type="button"
-                onClick={() => setConfig({
-                  ...config,
-                  extraction: { ...config.extraction, technique: tech }
-                })}
-                className={cn(
-                  "p-4 border-2 rounded-lg text-left transition-colors",
-                  technique === tech
-                    ? tech === "api" ? "border-purple-500 bg-purple-50 text-purple-700" :
-                      tech === "html" ? "border-blue-500 bg-blue-50 text-blue-700" :
-                      "border-green-500 bg-green-50 text-green-700"
-                    : "border-gray-200 hover:border-gray-300"
-                )}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  {tech === "api" ? <Network className="h-5 w-5" /> :
-                   tech === "html" ? <Globe className="h-5 w-5" /> :
-                   <Code className="h-5 w-5" />}
-                  <span className="font-medium">{tech.toUpperCase()}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-[600px]">
+          {/* Configuration Panel */}
+          <div className="p-6 border-r">
+            <p className="text-gray-600 mb-6">
+              Configure how to extract job details and generate markdown for LLM processing.
+            </p>
+            
+            {/* Technique Selection */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Extraction Technique
+              </label>
+              <div className="grid grid-cols-1 gap-3">
+                {(["api", "html", "js"] as ExtractionTechnique[]).map((tech) => (
+                  <button
+                    key={tech}
+                    type="button"
+                    onClick={() => setConfig({
+                      ...config,
+                      extraction: { ...config.extraction, technique: tech }
+                    })}
+                    className={cn(
+                      "p-4 border-2 rounded-lg text-left transition-colors",
+                      technique === tech
+                        ? tech === "api" ? "border-purple-500 bg-purple-50 text-purple-700" :
+                          tech === "html" ? "border-blue-500 bg-blue-50 text-blue-700" :
+                          "border-green-500 bg-green-50 text-green-700"
+                        : "border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      {tech === "api" ? <Network className="h-5 w-5" /> :
+                       tech === "html" ? <Globe className="h-5 w-5" /> :
+                       <Code className="h-5 w-5" />}
+                      <span className="font-medium">{tech.toUpperCase()}</span>
+                    </div>
+                    <p className="text-sm">
+                      {tech === "api" ? "Direct API calls for job data" :
+                       tech === "html" ? "Content-aware HTML extraction with Crawl4AI" :
+                       "JavaScript rendering with Crawl4AI (for dynamic sites)"}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          
+          {/* Preview Panel */}
+          <div className="p-6 bg-gray-50">
+            <h3 className="font-medium text-gray-900 mb-4">Preview</h3>
+            
+            {/* Simple markdown preview */}
+            <div className="bg-white rounded-lg border h-96 overflow-auto">
+              <div className="p-4">
+                <h4 className="font-medium text-gray-900 mb-3">Generated Markdown</h4>
+                <div className="bg-gray-50 p-3 rounded text-sm font-mono whitespace-pre-wrap">
+# Sample Job Details
+
+**Title:** Senior Software Engineer
+**Company:** Tech Corp
+**Location:** San Francisco, CA
+**Salary:** $120k-$150k
+
+## Requirements
+- React experience
+- Node.js background
+- TypeScript knowledge
                 </div>
-                <p className="text-sm">
-                  {tech === "api" ? "Direct API calls for job data" :
-                   tech === "html" ? "Content-aware HTML extraction with Crawl4AI" :
-                   "JavaScript rendering with Crawl4AI (for dynamic sites)"}
-                </p>
-              </button>
-            ))}
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div className="space-y-6">
-          {/* Navigation Settings */}
+      </div>
+    </div>
+  );
+}
+
+// Sub-components for better organization  
+function ContentSelectionSection({ crawl4aiConfig, updateCrawl4AIConfig, addTargetElement, addExcludedElement }: any) {
+  return (
+    <div>
+      <h3 className="font-medium text-gray-900 mb-3">Content Selection Strategy</h3>
           <div>
             <h3 className="font-medium text-gray-900 mb-3">Navigation</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

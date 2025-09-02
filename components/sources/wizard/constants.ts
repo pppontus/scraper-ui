@@ -35,13 +35,13 @@ export const ALL_STEPS: StepConfig[] = [
   },
   { 
     id: "discovery_setup", 
-    label: "Discovery", 
+    label: "Find Jobs", 
     icon: Search, 
     description: "Configure how to find job URLs"
   },
   { 
     id: "extraction_setup", 
-    label: "Extraction", 
+    label: "Extract Details", 
     icon: FileText, 
     description: "Configure how to extract job details"
   },
