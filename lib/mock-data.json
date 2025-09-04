@@ -355,6 +355,24 @@
         "timeoutHours": 24,
         "rememberMe": true
       }
-    }
+    },
+    "navigation": [
+      {
+        "id": "cat_1",
+        "name": "Marketing",
+        "subcategories": [
+          { "id": "cat_1_1", "name": "E-commerce" },
+          { "id": "cat_1_2", "name": "SEO" }
+        ]
+      },
+      {
+        "id": "cat_2",
+        "name": "Sales",
+        "subcategories": [
+          { "id": "cat_2_1", "name": "B2B" },
+          { "id": "cat_2_2", "name": "B2C" }
+        ]
+      }
+    ]
   }
 }

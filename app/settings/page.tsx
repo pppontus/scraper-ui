@@ -13,12 +13,18 @@ import {
   DollarSign,
   FileCode,
   Clock,
-  Zap
+  Zap,
+  FolderTree,
+  Plus,
+  ArrowUp,
+  ArrowDown,
+  Trash2,
+  GripVertical
 } from "lucide-react";
 import mockData from "@/lib/mock-data.json";
 import { cn } from "@/lib/utils";
 
-type TabId = "notifications" | "defaults" | "auth";
+type TabId = "notifications" | "defaults" | "auth" | "navigation";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("notifications");
@@ -33,6 +39,7 @@ export default function SettingsPage() {
   const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "defaults", label: "Defaults", icon: Database },
+    { id: "navigation", label: "Navigation", icon: FolderTree },
     { id: "auth", label: "Authentication", icon: Shield }
   ];
 
@@ -90,6 +97,7 @@ export default function SettingsPage() {
         <div className="p-6 max-w-4xl">
           {activeTab === "notifications" && <NotificationsTab settings={settings} />}
           {activeTab === "defaults" && <DefaultsTab settings={settings} />}
+          {activeTab === "navigation" && <NavigationTab settings={settings} />}
           {activeTab === "auth" && <AuthTab settings={settings} />}
         </div>
       </div>
@@ -281,6 +289,157 @@ function NotificationsTab({ settings }: any) {
             />
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Simple two-level navigation editor (Categories and Subcategories)
+function NavigationTab({ settings }: any) {
+  type Subcategory = { id: string; name: string };
+  type Category = { id: string; name: string; subcategories: Subcategory[] };
+
+  const initialNav: Category[] = (settings?.navigation as Category[] | undefined) || [
+    { id: "cat_1", name: "Marketing", subcategories: [
+      { id: "cat_1_1", name: "E-commerce" },
+      { id: "cat_1_2", name: "SEO" }
+    ]},
+    { id: "cat_2", name: "Sales", subcategories: [
+      { id: "cat_2_1", name: "B2B" },
+      { id: "cat_2_2", name: "B2C" }
+    ]}
+  ];
+
+  const [nav, setNav] = useState<Category[]>(initialNav);
+
+  const newId = () => Math.random().toString(36).slice(2, 9);
+
+  const addCategory = () => {
+    setNav(prev => [...prev, { id: `cat_${newId()}`, name: "New Category", subcategories: [] }]);
+  };
+
+  const updateCategoryName = (catId: string, name: string) => {
+    setNav(prev => prev.map(c => c.id === catId ? { ...c, name } : c));
+  };
+
+  const deleteCategory = (catId: string) => {
+    setNav(prev => prev.filter(c => c.id !== catId));
+  };
+
+  const moveCategory = (index: number, dir: -1 | 1) => {
+    setNav(prev => {
+      const next = [...prev];
+      const target = index + dir;
+      if (target < 0 || target >= next.length) return prev;
+      const [item] = next.splice(index, 1);
+      next.splice(target, 0, item);
+      return next;
+    });
+  };
+
+  const addSub = (catId: string) => {
+    setNav(prev => prev.map(c => c.id === catId
+      ? { ...c, subcategories: [...c.subcategories, { id: `sub_${newId()}`, name: "New Subcategory" }] }
+      : c
+    ));
+  };
+
+  const updateSub = (catId: string, subId: string, name: string) => {
+    setNav(prev => prev.map(c => c.id === catId
+      ? { ...c, subcategories: c.subcategories.map(s => s.id === subId ? { ...s, name } : s) }
+      : c
+    ));
+  };
+
+  const deleteSub = (catId: string, subId: string) => {
+    setNav(prev => prev.map(c => c.id === catId
+      ? { ...c, subcategories: c.subcategories.filter(s => s.id !== subId) }
+      : c
+    ));
+  };
+
+  const moveSub = (catId: string, index: number, dir: -1 | 1) => {
+    setNav(prev => prev.map(c => {
+      if (c.id !== catId) return c;
+      const nextSubs = [...c.subcategories];
+      const target = index + dir;
+      if (target < 0 || target >= nextSubs.length) return c;
+      const [item] = nextSubs.splice(index, 1);
+      nextSubs.splice(target, 0, item);
+      return { ...c, subcategories: nextSubs };
+    }));
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <FolderTree className="h-5 w-5 text-blue-600" />
+            <h3 className="text-lg font-semibold">Website Navigation</h3>
+          </div>
+          <button
+            onClick={addCategory}
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" /> Add Category
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {nav.map((cat, i) => (
+            <div key={cat.id} className="border border-gray-200 rounded-lg">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 border-b border-gray-200">
+                <GripVertical className="h-4 w-4 text-gray-400" />
+                <input
+                  value={cat.name}
+                  onChange={(e) => updateCategoryName(cat.id, e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  placeholder="Category name"
+                />
+                <div className="flex items-center gap-1">
+                  <button onClick={() => moveCategory(i, -1)} disabled={i === 0} className="p-2 rounded border disabled:opacity-50"><ArrowUp className="h-4 w-4" /></button>
+                  <button onClick={() => moveCategory(i, +1)} disabled={i === nav.length - 1} className="p-2 rounded border disabled:opacity-50"><ArrowDown className="h-4 w-4" /></button>
+                  <button onClick={() => deleteCategory(cat.id)} className="p-2 rounded border hover:bg-red-50"><Trash2 className="h-4 w-4 text-red-600" /></button>
+                </div>
+              </div>
+
+              <div className="p-3 space-y-2">
+                {cat.subcategories.map((sub, si) => (
+                  <div key={sub.id} className="flex items-center gap-3 pl-7">
+                    <span className="w-4 h-4 rounded bg-gray-200 inline-block" />
+                    <input
+                      value={sub.name}
+                      onChange={(e) => updateSub(cat.id, sub.id, e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      placeholder="Subcategory name"
+                    />
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => moveSub(cat.id, si, -1)} disabled={si === 0} className="p-2 rounded border disabled:opacity-50"><ArrowUp className="h-4 w-4" /></button>
+                      <button onClick={() => moveSub(cat.id, si, +1)} disabled={si === cat.subcategories.length - 1} className="p-2 rounded border disabled:opacity-50"><ArrowDown className="h-4 w-4" /></button>
+                      <button onClick={() => deleteSub(cat.id, sub.id)} className="p-2 rounded border hover:bg-red-50"><Trash2 className="h-4 w-4 text-red-600" /></button>
+                    </div>
+                  </div>
+                ))}
+                <div className="pl-7">
+                  <button onClick={() => addSub(cat.id)} className="inline-flex items-center gap-2 px-2 py-1 text-xs border rounded hover:bg-gray-50">
+                    <Plus className="h-3 w-3" /> Add Subcategory
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {nav.length === 0 && (
+            <div className="text-sm text-gray-500">No categories yet. Click “Add Category” to get started.</div>
+          )}
+        </div>
+      </div>
+
+      {/* Optional: Preview JSON for clarity */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="text-sm font-medium text-gray-700 mb-2">Current structure (preview)</div>
+        <pre className="text-xs text-gray-800 whitespace-pre-wrap bg-gray-50 border border-gray-200 rounded p-3">{JSON.stringify(nav, null, 2)}</pre>
+        <p className="text-xs text-gray-500 mt-2">This is UI-only and would be persisted via backend in production.</p>
       </div>
     </div>
   );
@@ -522,4 +681,3 @@ function AuthTab({ settings }: any) {
     </div>
   );
 }
-
