@@ -14,7 +14,9 @@ import { ALL_STEPS, STORAGE_KEY, StepId } from "@/components/sources/wizard/cons
 import { BasicsStep } from "@/components/sources/wizard/steps/BasicsStep";
 import { DiscoverySetupStep } from "@/components/sources/wizard/steps/DiscoverySetupStep";
 import { ExtractionSetupStep } from "@/components/sources/wizard/steps/ExtractionSetupStep";
-import { LLMStep, ScheduleStep, ReviewStep } from "@/components/sources/wizard/steps/PlaceholderSteps";
+import { LLMStep } from "@/components/sources/wizard/steps/LLMStep";
+import { ScheduleStep } from "@/components/sources/wizard/steps/ScheduleStep";
+import { ReviewStep } from "@/components/sources/wizard/steps/PlaceholderSteps";
 
 export default function NewSourcePage() {
   const router = useRouter();

@@ -1,0 +1,477 @@
+import React from "react";
+import { Network } from "lucide-react";
+import { cn, parseCurl } from "@/lib/utils";
+import { SourceConfig, DiscoveryTechnique, DiscoveryConfig } from "@/lib/types";
+import { ApiTestAndSelection } from "../sources/wizard/components/ApiTestAndSelection";
+import { HtmlJsDiscoveryConfig } from "../sources/wizard/steps/DiscoverySetupStep/HtmlJsDiscoveryConfig";
+
+interface DiscoveryConfigFormProps {
+  config: SourceConfig;
+  setConfig: (config: SourceConfig) => void;
+  onValidation?: (isValid: boolean) => void;
+  variant?: 'wizard' | 'settings';
+}
+
+export function DiscoveryConfigForm({ 
+  config, 
+  setConfig, 
+  onValidation,
+  variant = 'wizard' 
+}: DiscoveryConfigFormProps) {
+  const technique = config.discovery.technique;
+  
+  const updateDiscoveryConfig = (updates: Partial<DiscoveryConfig>) => {
+    setConfig({
+      ...config,
+      discovery: {
+        ...config.discovery,
+        config: {
+          ...config.discovery.config,
+          ...updates
+        }
+      }
+    });
+  };
+
+  // Basic validation - technique is required
+  const isValid = Boolean(technique);
+  
+  // Emit validation when form changes
+  React.useEffect(() => {
+    onValidation?.(isValid);
+  }, [isValid, onValidation]);
+
+  return (
+    <div className="space-y-6">
+      {variant === 'wizard' && (
+        <p className="text-gray-600 mb-6">
+          Configure how to find job listing URLs. This step discovers all available job postings.
+        </p>
+      )}
+      
+      {/* Technique Selection */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Discovery Technique
+        </label>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {(["api", "rss", "sitemap", "html", "js"] as DiscoveryTechnique[]).map((tech) => (
+            <button
+              key={tech}
+              type="button"
+              onClick={() => setConfig({
+                ...config,
+                discovery: { ...config.discovery, technique: tech }
+              })}
+              className={cn(
+                "p-3 border-2 rounded-lg text-center transition-colors",
+                technique === tech
+                  ? tech === "api" ? "border-purple-500 bg-purple-50 text-purple-700" :
+                    tech === "html" ? "border-blue-500 bg-blue-50 text-blue-700" :
+                    tech === "js" ? "border-green-500 bg-green-50 text-green-700" :
+                    "border-orange-500 bg-orange-50 text-orange-700"
+                  : "border-gray-200 hover:border-gray-300"
+              )}
+            >
+              <div className="font-medium">{tech.toUpperCase()}</div>
+              <div className="text-xs mt-1">
+                {tech === "api" ? "API calls" :
+                 tech === "rss" ? "RSS feeds" :
+                 tech === "sitemap" ? "XML sitemaps" :
+                 tech === "html" ? "Static HTML" :
+                 "JS rendering"}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Technique-specific configuration */}
+      {technique === "html" || technique === "js" ? (
+        <HtmlJsDiscoveryConfig 
+          config={config}
+          setConfig={setConfig}
+          technique={technique}
+          updateDiscoveryConfig={updateDiscoveryConfig}
+        />
+      ) : technique === "api" ? (
+        <ApiDiscoveryConfig 
+          config={config}
+          setConfig={setConfig}
+          updateDiscoveryConfig={updateDiscoveryConfig}
+        />
+      ) : (
+        <div className="text-center py-8 text-gray-500">
+          Configuration for {technique} discovery coming soon...
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ApiDiscoveryConfig({ config, setConfig, updateDiscoveryConfig }: any) {
+  return (
+    <div className="space-y-6">
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Network className="h-4 w-4 text-purple-600" />
+          <span className="font-medium text-purple-900">API Configuration</span>
+        </div>
+        <p className="text-sm text-purple-700">Configure API endpoints and authentication</p>
+      </div>
+      
+      {/* cURL Import Section */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <h3 className="font-medium text-gray-900 mb-3">Quick Setup from cURL</h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Paste a cURL command from Chrome DevTools to automatically fill in the API configuration:
+        </p>
+        <textarea
+          placeholder={`curl 'https://api.example.com/jobs' \\
+  -H 'accept: application/json' \\
+  -H 'user-agent: Mozilla/5.0...' \\
+  -H 'referer: https://example.com'`}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+          rows={4}
+          onChange={(e) => {
+            const curlCommand = e.target.value;
+            if (curlCommand.trim()) {
+              const parsed = parseCurl(curlCommand);
+              if (parsed) {
+                // Auto-fill the API configuration
+                const extractBaseUrl = (url: string) => {
+                  try {
+                    const urlObj = new URL(url);
+                    return `${urlObj.protocol}//${urlObj.host}`;
+                  } catch {
+                    return "";
+                  }
+                };
+
+                updateDiscoveryConfig({
+                  api: {
+                    endpoint: parsed.url,
+                    method: parsed.method,
+                    headers: parsed.headers,
+                    auth: { type: "none" },
+                    pagination: { type: "none" },
+                    responseMapping: { urlPath: "" },
+                    baseUrl: extractBaseUrl(parsed.url)
+                  }
+                });
+              }
+            }
+          }}
+        />
+        <p className="text-xs text-gray-500 mt-2">
+          💡 Tip: Right-click on a network request in Chrome DevTools → Copy → Copy as cURL
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            API Endpoint
+          </label>
+          <input
+            type="url"
+            value={config.discovery.config.api?.endpoint || ""}
+            onChange={(e) => {
+              const extractBaseUrl = (url: string) => {
+                try {
+                  const urlObj = new URL(url);
+                  return `${urlObj.protocol}//${urlObj.host}`;
+                } catch {
+                  return "";
+                }
+              };
+
+              updateDiscoveryConfig({
+                api: {
+                  ...config.discovery.config.api,
+                  endpoint: e.target.value,
+                  method: config.discovery.config.api?.method || "GET",
+                  headers: config.discovery.config.api?.headers || {},
+                  auth: config.discovery.config.api?.auth || { type: "none" },
+                  pagination: config.discovery.config.api?.pagination || { type: "none" },
+                  responseMapping: config.discovery.config.api?.responseMapping || { urlPath: "" },
+                  baseUrl: e.target.value ? extractBaseUrl(e.target.value) : (config.discovery.config.api?.baseUrl || "")
+                }
+              });
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="https://api.example.com/jobs"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            HTTP Method
+          </label>
+          <select
+            value={config.discovery.config.api?.method || "GET"}
+            onChange={(e) => updateDiscoveryConfig({
+              api: {
+                ...config.discovery.config.api,
+                endpoint: config.discovery.config.api?.endpoint || "",
+                method: e.target.value,
+                headers: config.discovery.config.api?.headers || {},
+                auth: config.discovery.config.api?.auth || { type: "none" },
+                pagination: config.discovery.config.api?.pagination || { type: "none" },
+                responseMapping: config.discovery.config.api?.responseMapping || { urlPath: "" }
+              }
+            })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+          </select>
+        </div>
+      </div>
+      
+      {/* Pagination */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <h3 className="font-medium text-gray-900 mb-3">Pagination</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Strategy</label>
+            <select
+              value={config.discovery.config.api?.pagination?.type || 'none'}
+              onChange={(e) => updateDiscoveryConfig({
+                api: {
+                  ...config.discovery.config.api,
+                  pagination: { ...(config.discovery.config.api?.pagination || {}), type: e.target.value }
+                }
+              })}
+              className="w-full px-3 py-2 border rounded"
+            >
+              <option value="none">None</option>
+              <option value="page">Page number</option>
+              <option value="offset">Offset</option>
+              <option value="cursor">Cursor</option>
+              <option value="link">Link-based</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Max pages</label>
+            <input
+              type="number"
+              value={config.discovery.config.api?.pagination?.maxPages || 3}
+              onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), maxPages: parseInt(e.target.value) || 0 } } })}
+              className="w-full px-3 py-2 border rounded"
+              min={1}
+              max={500}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Delay between pages (ms)</label>
+            <input
+              type="number"
+              value={config.discovery.config.api?.pagination?.delayMs || 0}
+              onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), delayMs: parseInt(e.target.value) || 0 } } })}
+              className="w-full px-3 py-2 border rounded"
+              min={0}
+              step={100}
+            />
+          </div>
+          {(['page'] as const).includes((config.discovery.config.api?.pagination?.type || 'none') as any) && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">pageParam</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.pageParam || 'page'}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), pageParam: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">pageSize/limit</label>
+                <input
+                  type="number"
+                  value={config.discovery.config.api?.pagination?.pageSize || 25}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), pageSize: parseInt(e.target.value) || 0 } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+            </>
+          )}
+          {(['offset'] as const).includes((config.discovery.config.api?.pagination?.type || 'none') as any) && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">offsetParam</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.offsetParam || 'offset'}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), offsetParam: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">limitParam</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.limitParam || 'limit'}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), limitParam: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+            </>
+          )}
+          {(['cursor'] as const).includes((config.discovery.config.api?.pagination?.type || 'none') as any) && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">cursorParam</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.cursorParam || 'cursor'}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), cursorParam: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">pageSize/limit</label>
+                <input
+                  type="number"
+                  value={config.discovery.config.api?.pagination?.pageSize || 25}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), pageSize: parseInt(e.target.value) || 0 } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">nextCursorPath (JSONPath)</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.nextCursorPath || ''}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), nextCursorPath: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="$.meta.next_cursor or $.paging.next"
+                />
+              </div>
+            </>
+          )}
+          {(['link'] as const).includes((config.discovery.config.api?.pagination?.type || 'none') as any) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div className="md:col-span-2 text-xs text-gray-600">
+                Link-based pagination is resolved from server-provided links (e.g., HTTP Link headers or next URLs in payload).
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">nextLinkPath (JSONPath)</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.nextLinkPath || ''}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), nextLinkPath: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="$.links.next or $.meta.next"
+                />
+              </div>
+            </div>
+          )}
+          <div className="mt-4 md:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Stop condition (optional)</label>
+            <input
+              type="text"
+              value={config.discovery.config.api?.pagination?.stopCondition || ''}
+              onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), stopCondition: e.target.value } } })}
+              placeholder="e.g., empty items array or no next token"
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Custom Headers */}
+      <div>
+        <h3 className="font-medium text-gray-900 mb-3">Custom Headers</h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Additional headers beyond those auto-filled from cURL (optional):
+        </p>
+        <textarea
+          value={Object.entries(config.discovery.config.api?.headers || {})
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n')}
+          onChange={(e) => {
+            const headers: Record<string, string> = {};
+            e.target.value.split('\n').forEach(line => {
+              const [key, ...valueParts] = line.split(':');
+              if (key?.trim() && valueParts.length > 0) {
+                headers[key.trim()] = valueParts.join(':').trim();
+              }
+            });
+            updateDiscoveryConfig({
+              api: {
+                ...config.discovery.config.api,
+                endpoint: config.discovery.config.api?.endpoint || "",
+                method: config.discovery.config.api?.method || "GET",
+                headers,
+                auth: config.discovery.config.api?.auth || { type: "none" },
+                pagination: config.discovery.config.api?.pagination || { type: "none" },
+                responseMapping: config.discovery.config.api?.responseMapping || { urlPath: "" }
+              }
+            });
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+          rows={3}
+          placeholder={`Accept: application/json\nUser-Agent: CustomBot/1.0\nX-Custom-Header: value`}
+        />
+        <p className="text-xs text-gray-500 mt-1">One header per line in format: Header-Name: value</p>
+      </div>
+
+      {/* Test API and Select Job URLs */}
+      <ApiTestAndSelection config={config} setConfig={setConfig} />
+
+      {/* Pagination helpers (mock) */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="px-3 py-2 bg-white border rounded hover:bg-gray-100 text-sm"
+            onClick={() => {
+              updateDiscoveryConfig({
+                api: {
+                  ...config.discovery.config.api,
+                  pagination: {
+                    ...(config.discovery.config.api?.pagination || {}),
+                    type: 'page', pageParam: 'page', pageSize: 25,
+                    maxPages: config.discovery.config.api?.pagination?.maxPages || 3
+                  }
+                }
+              });
+            }}
+          >
+            Auto-detect from response
+          </button>
+          <button
+            type="button"
+            className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+            onClick={() => {
+              const p = config.discovery.config.api?.pagination || { type: 'none' };
+              const base = config.discovery.config.api?.endpoint || 'https://api.example.com/jobs';
+              const pages = Math.min(p.maxPages || 3, 3);
+              const preview: string[] = [];
+              for (let i = 1; i <= pages; i++) {
+                if (p.type === 'page') {
+                  const param = p.pageParam || 'page';
+                  const size = p.pageSize || 25;
+                  preview.push(`${base}?${param}=${i}&limit=${size}`);
+                } else if (p.type === 'offset') {
+                  const off = p.offsetParam || 'offset';
+                  const lim = p.limitParam || 'limit';
+                  const size = p.pageSize || 25;
+                  preview.push(`${base}?${off}=${(i-1)*size}&${lim}=${size}`);
+                } else if (p.type === 'cursor') {
+                  const cur = p.cursorParam || 'cursor';
+                  preview.push(`${base}?${cur}=<cursor_${i}>`);
+                } else if (p.type === 'link') {
+                  preview.push(`${base}  (follow next from ${p.nextLinkPath || 'response'})`);
+                } else {
+                  preview.push(base);
+                }
+              }
+              window.alert(`Preview pagination (mock)\n` + preview.join('\n'));
+            }}
+          >
+            Preview pagination
+          </button>
+        </div>
+        <div className="text-xs text-gray-600 mt-2">
+          These are mock helpers to clarify configuration; backend integration will power real previews later.
+        </div>
+      </div>
+    </div>
+  );
+}

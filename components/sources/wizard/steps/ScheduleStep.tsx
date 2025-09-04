@@ -1,24 +1,24 @@
 import React from "react";
-import { FileText } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { SourceConfig } from "@/lib/types";
-import { ExtractionConfigForm } from "@/components/config/ExtractionConfigForm";
+import { ScheduleConfigForm } from "@/components/config/ScheduleConfigForm";
 
-interface ExtractionSetupStepProps {
+interface ScheduleStepProps {
   config: SourceConfig;
   setConfig: (config: SourceConfig) => void;
 }
 
-export function ExtractionSetupStep({ config, setConfig }: ExtractionSetupStepProps) {
+export function ScheduleStep({ config, setConfig }: ScheduleStepProps) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="flex items-center gap-3 p-6 border-b">
-          <FileText className="h-5 w-5 text-blue-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Extract Details</h2>
+          <Calendar className="h-5 w-5 text-blue-600" />
+          <h2 className="text-lg font-semibold text-gray-900">Schedule Configuration</h2>
         </div>
         
         <div className="p-6">
-          <ExtractionConfigForm 
+          <ScheduleConfigForm 
             config={config}
             setConfig={setConfig}
             variant="wizard"
@@ -28,4 +28,3 @@ export function ExtractionSetupStep({ config, setConfig }: ExtractionSetupStepPr
     </div>
   );
 }
-

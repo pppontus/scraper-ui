@@ -1,24 +1,23 @@
 import React from "react";
-import { FileText } from "lucide-react";
 import { SourceConfig } from "@/lib/types";
-import { ExtractionConfigForm } from "@/components/config/ExtractionConfigForm";
+import { LLMConfigForm } from "@/components/config/LLMConfigForm";
 
-interface ExtractionSetupStepProps {
+interface LLMStepProps {
   config: SourceConfig;
   setConfig: (config: SourceConfig) => void;
 }
 
-export function ExtractionSetupStep({ config, setConfig }: ExtractionSetupStepProps) {
+export function LLMStep({ config, setConfig }: LLMStepProps) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="flex items-center gap-3 p-6 border-b">
-          <FileText className="h-5 w-5 text-blue-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Extract Details</h2>
+          <div className="h-5 w-5 text-blue-600">🤖</div>
+          <h2 className="text-lg font-semibold text-gray-900">LLM Parsing</h2>
         </div>
         
         <div className="p-6">
-          <ExtractionConfigForm 
+          <LLMConfigForm 
             config={config}
             setConfig={setConfig}
             variant="wizard"
@@ -28,4 +27,3 @@ export function ExtractionSetupStep({ config, setConfig }: ExtractionSetupStepPr
     </div>
   );
 }
-
