@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 import { 
-  Bell, 
-  Mail, 
-  Slack, 
   Shield,
   Database,
   Save,
@@ -24,10 +21,10 @@ import {
 import mockData from "@/lib/mock-data.json";
 import { cn } from "@/lib/utils";
 
-type TabId = "notifications" | "defaults" | "auth" | "navigation";
+type TabId = "defaults" | "auth" | "navigation";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("notifications");
+  const [activeTab, setActiveTab] = useState<TabId>("defaults");
   const [settings, setSettings] = useState(mockData.settings);
   const [saved, setSaved] = useState(false);
 
@@ -37,7 +34,6 @@ export default function SettingsPage() {
   };
 
   const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
-    { id: "notifications", label: "Notifications", icon: Bell },
     { id: "defaults", label: "Defaults", icon: Database },
     { id: "navigation", label: "Navigation", icon: FolderTree },
     { id: "auth", label: "Authentication", icon: Shield }
@@ -95,7 +91,6 @@ export default function SettingsPage() {
       {/* Tab Content */}
       <div className="flex-1 overflow-auto bg-gray-50">
         <div className="p-6 max-w-4xl">
-          {activeTab === "notifications" && <NotificationsTab settings={settings} />}
           {activeTab === "defaults" && <DefaultsTab settings={settings} />}
           {activeTab === "navigation" && <NavigationTab settings={settings} />}
           {activeTab === "auth" && <AuthTab settings={settings} />}
@@ -105,194 +100,6 @@ export default function SettingsPage() {
   );
 }
 
-function NotificationsTab({ settings }: any) {
-  const [channels, setChannels] = useState(settings.notifications.channels);
-  const [events, setEvents] = useState(settings.notifications.events);
-
-  return (
-    <div className="space-y-6">
-      {/* Notification Channels */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-6">Notification Channels</h3>
-        
-        {/* Slack Configuration */}
-        <div className="space-y-4 pb-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Slack className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <h4 className="font-medium">Slack</h4>
-                <p className="text-sm text-gray-500">Send alerts to Slack channel</p>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={channels.slack.enabled}
-                onChange={(e) => setChannels({
-                  ...channels,
-                  slack: { ...channels.slack, enabled: e.target.checked }
-                })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-          {channels.slack.enabled && (
-            <div className="ml-11 space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Webhook URL
-                </label>
-                <input
-                  type="text"
-                  defaultValue={channels.slack.webhook}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  placeholder="https://hooks.slack.com/services/..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Channel
-                </label>
-                <input
-                  type="text"
-                  defaultValue={channels.slack.channel}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  placeholder="#scraper-alerts"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Email Configuration */}
-        <div className="space-y-4 pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Mail className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <h4 className="font-medium">Email</h4>
-                <p className="text-sm text-gray-500">Send alerts via email</p>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={channels.email.enabled}
-                onChange={(e) => setChannels({
-                  ...channels,
-                  email: { ...channels.email, enabled: e.target.checked }
-                })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-          {channels.email.enabled && (
-            <div className="ml-11">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                defaultValue={channels.email.to}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                placeholder="pontus@example.com"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Notification Events */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-6">Notification Events</h3>
-        <div className="space-y-4">
-          <label className="flex items-center justify-between">
-            <div>
-              <div className="font-medium">Failures</div>
-              <div className="text-sm text-gray-500">Alert when a scraper run fails</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={events.failures}
-              onChange={(e) => setEvents({ ...events, failures: e.target.checked })}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between">
-            <div>
-              <div className="font-medium">Zero New Items</div>
-              <div className="text-sm text-gray-500">Alert when no new items are found</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={events.zeroNewItems}
-              onChange={(e) => setEvents({ ...events, zeroNewItems: e.target.checked })}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between">
-            <div>
-              <div className="font-medium">Error Spikes</div>
-              <div className="text-sm text-gray-500">Alert on unusual error patterns</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={events.errorSpikes}
-              onChange={(e) => setEvents({ ...events, errorSpikes: e.target.checked })}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between">
-            <div>
-              <div className="font-medium">Schema Violations</div>
-              <div className="text-sm text-gray-500">Alert when parsed data doesn't match schema</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={events.schemaViolations}
-              onChange={(e) => setEvents({ ...events, schemaViolations: e.target.checked })}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </label>
-        </div>
-      </div>
-
-      {/* Rate Limiting */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-6">Rate Limiting</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Max Notifications per Hour
-            </label>
-            <input
-              type="number"
-              defaultValue={settings.notifications.rateLimit.maxPerHour}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cooldown (minutes)
-            </label>
-            <input
-              type="number"
-              defaultValue={settings.notifications.rateLimit.cooldown}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Simple two-level navigation editor (Categories and Subcategories)
 function NavigationTab({ settings }: any) {
