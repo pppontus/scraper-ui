@@ -345,8 +345,16 @@
       "costCapWarning": 50
     },
     "auth": {
-      "enabled": true,
-      "networkRestriction": "192.168.1.0/24"
+      "password": {
+        "currentHash": "$2b$12$example_hash_for_ui_mockup_only",
+        "requireChange": false,
+        "minLength": 12,
+        "requireSpecialChars": true
+      },
+      "session": {
+        "timeoutHours": 24,
+        "rememberMe": true
+      }
     }
   }
 }

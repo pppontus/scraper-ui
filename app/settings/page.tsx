@@ -5,7 +5,6 @@ import {
   Bell, 
   Mail, 
   Slack, 
-  Globe,
   Shield,
   Database,
   Save,
@@ -19,7 +18,7 @@ import {
 import mockData from "@/lib/mock-data.json";
 import { cn } from "@/lib/utils";
 
-type TabId = "notifications" | "defaults" | "auth" | "compliance";
+type TabId = "notifications" | "defaults" | "auth";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("notifications");
@@ -34,8 +33,7 @@ export default function SettingsPage() {
   const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "defaults", label: "Defaults", icon: Database },
-    { id: "auth", label: "Authentication", icon: Shield },
-    { id: "compliance", label: "Compliance", icon: Globe }
+    { id: "auth", label: "Authentication", icon: Shield }
   ];
 
   return (
@@ -93,7 +91,6 @@ export default function SettingsPage() {
           {activeTab === "notifications" && <NotificationsTab settings={settings} />}
           {activeTab === "defaults" && <DefaultsTab settings={settings} />}
           {activeTab === "auth" && <AuthTab settings={settings} />}
-          {activeTab === "compliance" && <ComplianceTab />}
         </div>
       </div>
     </div>
@@ -420,38 +417,78 @@ function DefaultsTab({ settings }: any) {
 }
 
 function AuthTab({ settings }: any) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-6">Authentication Settings</h3>
+        <h3 className="text-lg font-semibold mb-6">Password Authentication</h3>
         
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-medium">Enable Authentication</div>
-              <div className="text-sm text-gray-500">Require login to access dashboard</div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                defaultChecked={settings.auth.enabled}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Network Restriction (CIDR)
+              Set New Password
             </label>
-            <input
-              type="text"
-              defaultValue={settings.auth.networkRestriction}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono"
-              placeholder="192.168.1.0/24"
-            />
-            <p className="mt-1 text-xs text-gray-500">Restrict access to specific IP ranges</p>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-10"
+                placeholder="Enter new password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-2 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Minimum Length
+              </label>
+              <input
+                type="number"
+                min="8"
+                max="128"
+                defaultValue={settings.auth.password?.minLength || 12}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Session Timeout (hours)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="168"
+                defaultValue={settings.auth.session?.timeoutHours || 24}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                defaultChecked={settings.auth.password?.requireSpecialChars}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm">Require special characters</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                defaultChecked={settings.auth.session?.rememberMe}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm">Allow "Remember Me"</span>
+            </label>
           </div>
         </div>
       </div>
@@ -468,83 +505,16 @@ function AuthTab({ settings }: any) {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ComplianceTab() {
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-6">Robots.txt Compliance</h3>
-        
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-medium">Respect robots.txt</div>
-              <div className="text-sm text-gray-500">Global setting for all sources</div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                defaultChecked={true}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Default Policy Notes
-            </label>
-            <textarea
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              placeholder="Notes about compliance stance, contact information, etc."
-              defaultValue="Scraping for internal job aggregation purposes only. Contact: pontus@example.com"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-6">GDPR / Cookie Handling</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Default Cookie Banner Selector
-            </label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
-              placeholder="button.accept-cookies, #cookie-accept"
-              defaultValue="button.accept-cookies, .cookie-accept, #gdpr-accept"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              defaultChecked={true}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label className="text-sm text-gray-700">
-              Automatically handle cookie banners when detected
-            </label>
-          </div>
-        </div>
-      </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex gap-3">
           <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-medium text-blue-900">Compliance Note</h4>
+            <h4 className="font-medium text-blue-900">Security Recommendation</h4>
             <p className="text-sm text-blue-700 mt-1">
-              Per-source compliance settings can override these defaults. 
-              Always ensure you have permission to scrape target websites and comply with their terms of service.
+              Use a strong, unique password with at least 12 characters including special characters. 
+              Since you work from multiple locations, password authentication provides the flexibility you need 
+              while maintaining reasonable security for single-user access.
             </p>
           </div>
         </div>
@@ -552,3 +522,4 @@ function ComplianceTab() {
     </div>
   );
 }
+

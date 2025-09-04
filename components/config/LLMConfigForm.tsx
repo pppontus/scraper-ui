@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { SourceConfig } from "@/lib/types";
-import { DEFAULT_EXTRACTION_SCHEMA } from "../sources/wizard/constants";
+import { DEFAULT_EXTRACTION_SCHEMA, FULL_JOB_SCHEMA, SchemaFieldConfig } from "../sources/wizard/constants";
 
 interface LLMConfigFormProps {
   config: SourceConfig;
@@ -18,21 +18,25 @@ export function LLMConfigForm({
   const llmConfig = config.extraction.config.llm;
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<any | null>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  const schema = useMemo(() => llmConfig.extractionSchema || DEFAULT_EXTRACTION_SCHEMA, [llmConfig.extractionSchema]);
-  const fields = useMemo(() => Object.keys(schema || {}), [schema]);
+  // Use enhanced schema config or fallback to FULL_JOB_SCHEMA
+  const schemaConfig = useMemo(() => 
+    llmConfig.schemaConfig || FULL_JOB_SCHEMA, 
+    [llmConfig.schemaConfig]
+  );
+  
+  const fields = useMemo(() => Object.keys(schemaConfig), [schemaConfig]);
 
-  const isRequired = (key: string) => {
-    if (Array.isArray(llmConfig.requiredFields)) {
-      return llmConfig.requiredFields.includes(key);
-    }
-    if (llmConfig.requireAllFields) return true;
-    return key === 'title';
-  };
+  const updateFieldConfig = (fieldKey: string, updates: Partial<SchemaFieldConfig>) => {
+    const updatedSchemaConfig = {
+      ...schemaConfig,
+      [fieldKey]: {
+        ...schemaConfig[fieldKey],
+        ...updates
+      }
+    };
 
-  const toggleRequired = (key: string) => {
-    const current = new Set(llmConfig.requiredFields || (llmConfig.requireAllFields ? fields : []));
-    if (current.has(key)) current.delete(key); else current.add(key);
     setConfig({
       ...config,
       extraction: {
@@ -41,15 +45,19 @@ export function LLMConfigForm({
           ...config.extraction.config,
           llm: {
             ...llmConfig,
-            requiredFields: Array.from(current),
-            requireAllFields: false,
+            schemaConfig: updatedSchemaConfig
           },
         },
       },
     });
   };
 
-  const setAllRequired = (all: boolean) => {
+  const setAllUsed = (used: boolean) => {
+    const updatedSchemaConfig = Object.keys(schemaConfig).reduce((acc, key) => ({
+      ...acc,
+      [key]: { ...schemaConfig[key], used }
+    }), {});
+
     setConfig({
       ...config,
       extraction: {
@@ -58,8 +66,28 @@ export function LLMConfigForm({
           ...config.extraction.config,
           llm: {
             ...llmConfig,
-            requiredFields: all ? fields : [],
-            requireAllFields: false,
+            schemaConfig: updatedSchemaConfig
+          },
+        },
+      },
+    });
+  };
+
+  const setAllMandatory = (mandatory: boolean) => {
+    const updatedSchemaConfig = Object.keys(schemaConfig).reduce((acc, key) => ({
+      ...acc,
+      [key]: { ...schemaConfig[key], mandatory: schemaConfig[key].used ? mandatory : false }
+    }), {});
+
+    setConfig({
+      ...config,
+      extraction: {
+        ...config.extraction,
+        config: {
+          ...config.extraction.config,
+          llm: {
+            ...llmConfig,
+            schemaConfig: updatedSchemaConfig
           },
         },
       },
@@ -127,31 +155,82 @@ export function LLMConfigForm({
         />
       </div>
 
-      {/* Schema requirements */}
+      {/* Enhanced Schema Configuration */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="block text-sm font-medium text-gray-700">Output Schema Fields</label>
           <div className="flex items-center gap-2 text-xs">
-            <button type="button" className="px-2 py-1 border rounded" onClick={() => setAllRequired(true)}>Select all required</button>
-            <button type="button" className="px-2 py-1 border rounded" onClick={() => setAllRequired(false)}>Clear required</button>
+            <button type="button" className="px-2 py-1 border rounded" onClick={() => setAllUsed(true)}>Select all</button>
+            <button type="button" className="px-2 py-1 border rounded" onClick={() => setAllUsed(false)}>Clear all</button>
+            <button type="button" className="px-2 py-1 border rounded" onClick={() => setAllMandatory(true)}>All mandatory</button>
+            <button type="button" className="px-2 py-1 border rounded" onClick={() => setAllMandatory(false)}>None mandatory</button>
           </div>
         </div>
-        <div className="bg-gray-50 rounded border p-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {fields.map((key) => (
-              <label key={key} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={isRequired(key)}
-                  onChange={() => toggleRequired(key)}
-                />
-                <span className="font-mono">{key}</span>
-                <span className="text-xs text-gray-500">({String(schema[key]).replace(/\(\s*required\s*\)/i, '').trim()})</span>
-              </label>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-2">Checked fields are required for this source.</p>
+        
+        <div className="bg-gray-50 rounded border p-3 overflow-x-auto">
+          <table className="w-full min-w-[800px]">
+            <thead>
+              <tr className="border-b border-gray-300">
+                <th className="text-left py-2 px-2 font-medium text-sm text-gray-700 w-4">Used</th>
+                <th className="text-left py-2 px-2 font-medium text-sm text-gray-700 w-4">Req</th>
+                <th className="text-left py-2 px-2 font-medium text-sm text-gray-700 w-32">Field</th>
+                <th className="text-left py-2 px-2 font-medium text-sm text-gray-700 w-20">Type</th>
+                <th className="text-left py-2 px-2 font-medium text-sm text-gray-700">Instructions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fields.map((key) => {
+                const fieldConfig = schemaConfig[key];
+                return (
+                  <tr key={key} className="border-b border-gray-200 hover:bg-white">
+                    <td className="py-2 px-2">
+                      <input
+                        type="checkbox"
+                        checked={fieldConfig.used}
+                        onChange={(e) => updateFieldConfig(key, { used: e.target.checked, mandatory: e.target.checked ? fieldConfig.mandatory : false })}
+                        className="rounded"
+                      />
+                    </td>
+                    <td className="py-2 px-2">
+                      <input
+                        type="checkbox"
+                        checked={fieldConfig.mandatory && fieldConfig.used}
+                        disabled={!fieldConfig.used}
+                        onChange={(e) => updateFieldConfig(key, { mandatory: e.target.checked })}
+                        className="rounded"
+                      />
+                    </td>
+                    <td className="py-2 px-2">
+                      <span className="font-medium text-sm text-gray-900">{key}</span>
+                    </td>
+                    <td className="py-2 px-2">
+                      <span className="font-mono text-xs text-gray-600">{fieldConfig.dataType}</span>
+                    </td>
+                    <td className="py-2 px-2">
+                      <textarea
+                        value={fieldConfig.instructions}
+                        onChange={(e) => updateFieldConfig(key, { instructions: e.target.value })}
+                        onFocus={() => setFocusedField(key)}
+                        onBlur={() => setFocusedField(null)}
+                        disabled={!fieldConfig.used}
+                        className={`w-full px-2 py-1 text-xs border rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden ${
+                          !fieldConfig.used ? 'bg-gray-100 text-gray-500' : 'bg-white'
+                        }`}
+                        rows={focusedField === key ? 3 : 1}
+                        placeholder="Instructions for LLM extraction..."
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
+        
+        <p className="text-xs text-gray-500 mt-2">
+          <strong>Used:</strong> Include this field in the LLM output schema. 
+          <strong>Mandatory:</strong> LLM must provide this field (validation will fail if missing).
+        </p>
       </div>
 
       {/* Preview (below) */}
@@ -195,7 +274,17 @@ export function LLMConfigForm({
             {isRunning ? 'Parsing…' : 'Test Parse to Schema'}
           </button>
           <div className="mt-3 bg-white rounded border p-3 text-sm font-mono max-h-60 overflow-auto whitespace-pre">
-            {result ? JSON.stringify(result, null, 2) : JSON.stringify(schema, null, 2)}
+            {result ? JSON.stringify(result, null, 2) : 
+              JSON.stringify(
+                Object.keys(schemaConfig)
+                  .filter(key => schemaConfig[key].used)
+                  .reduce((acc, key) => ({ 
+                    ...acc, 
+                    [key]: `${schemaConfig[key].dataType}${schemaConfig[key].mandatory ? ' (required)' : ''}` 
+                  }), {}), 
+                null, 2
+              )
+            }
           </div>
         </div>
       </div>

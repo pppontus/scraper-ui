@@ -3,6 +3,7 @@ import { Globe, CheckCircle, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SourceConfig } from "@/lib/types";
 import { getLinkMatchType, getMatchReason } from "../../utils/pattern-matching";
+import { PopupAndCookieForm } from "../../components/PopupAndCookieForm";
 
 interface HtmlJsDiscoveryConfigProps {
   config: SourceConfig;
@@ -175,6 +176,32 @@ export function HtmlJsDiscoveryConfig({
         })()}
       </div>
       
+      {/* Page Prep: Cookies & Popups (JS-only, optional) */}
+      {technique === 'js' && (
+        <div>
+          <PopupAndCookieForm
+            technique={technique}
+            value={getSafeScrapingConfig().popupHandling}
+            existingInteractions={getSafeScrapingConfig().rendering?.interactions || []}
+            existingCustomJS={getSafeScrapingConfig().rendering?.customJS || ''}
+            onUpdate={({ popupHandling, interactions, customJS }) => {
+              const safe = getSafeScrapingConfig();
+              updateDiscoveryConfig({
+                scraping: {
+                  ...safe,
+                  popupHandling,
+                  rendering: {
+                    ...(safe.rendering || { technique: 'js' }),
+                    interactions,
+                    customJS,
+                  },
+                }
+              });
+            }}
+          />
+        </div>
+      )}
+
       {/* Step 1: Content Area Detection & Link Discovery */}
       <ContentAreaDetection 
         config={config}

@@ -56,6 +56,26 @@ export default function Dashboard() {
           >
             Last 7d
           </button>
+          <button
+            onClick={() => setTimeRange("30d")}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+              timeRange === "30d"
+                ? "bg-blue-100 text-blue-700"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Last 30d
+          </button>
+          <button
+            onClick={() => setTimeRange("all")}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+              timeRange === "all"
+                ? "bg-blue-100 text-blue-700"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            All time
+          </button>
         </div>
       </div>
 
@@ -101,9 +121,19 @@ export default function Dashboard() {
         />
         <KpiCard
           title={`LLM Cost (${timeRange})`}
-          value={formatCost(timeRange === "24h" ? stats.llmCost24h : stats.llmCost7d)}
+          value={formatCost(
+            timeRange === "24h" ? stats.llmCost24h : 
+            timeRange === "7d" ? stats.llmCost7d : 
+            timeRange === "30d" ? stats.llmCost7d * 4.3 : // Approximate 30d from 7d
+            stats.llmCost7d * 52 // Approximate all time from 7d
+          )}
           icon={DollarSign}
-          trend={timeRange === "24h" ? "+12%" : "+8%"}
+          trend={
+            timeRange === "24h" ? "+12%" : 
+            timeRange === "7d" ? "+8%" :
+            timeRange === "30d" ? "+15%" :
+            "+5%"
+          }
           color="purple"
         />
       </div>

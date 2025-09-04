@@ -36,6 +36,25 @@ export interface DiscoveryConfig {
       customJS?: string; // Custom JavaScript to execute
     };
 
+    // Optional helpers for closing popups/cookie dialogs (UI-only; compiled to interactions/customJS)
+    popupHandling?: {
+      enabled: boolean;
+      cookies?: {
+        selectors?: string[];        // Accept button/link selectors to click
+        preWaitMs?: number;          // wait before first action
+        waitMs?: number;             // wait after click
+        attempts?: number;           // how many times to try
+      };
+      popups?: {
+        closeSelectors?: string[];   // dismiss/close buttons
+        removeSelectors?: string[];  // overlay/backdrop selectors to remove via JS
+        key?: 'Escape' | 'None';     // optional key press
+        preWaitMs?: number;          // wait before first action
+        waitMs?: number;             // post-action wait
+        attempts?: number;           // how many times to try
+      };
+    };
+
     // Content area detection (Crawl4AI approach)
     contentArea: {
       strategy: "auto" | "selector" | "largest_content";
@@ -98,6 +117,25 @@ export interface ExtractionConfig {
     customJS?: string;
   };
 
+  // Optional helpers for closing popups/cookie dialogs (UI-only; compiled to interactions/customJS)
+  popupHandling?: {
+    enabled: boolean;
+    cookies?: {
+      selectors?: string[];        // Accept button/link selectors
+      preWaitMs?: number;
+      waitMs?: number;
+      attempts?: number;
+    };
+    popups?: {
+      closeSelectors?: string[];
+      removeSelectors?: string[];
+      key?: 'Escape' | 'None';
+      preWaitMs?: number;
+      waitMs?: number;
+      attempts?: number;
+    };
+  };
+
   // Legacy selector-based extraction (for backwards compatibility)
   selectors: {
     title: string;
@@ -157,14 +195,23 @@ export interface ExtractionConfig {
     
     // Extraction Instructions
     systemPrompt: string;       // Instructions for extraction
-    extractionSchema: Record<string, any>; // Expected JSON schema
+    extractionSchema: Record<string, any>; // Expected JSON schema (legacy support)
     outputFormat: "json" | "structured";
+    
+    // Enhanced Schema Configuration
+    schemaConfig?: Record<string, {
+      used: boolean;           // Whether field should be included in output
+      mandatory: boolean;      // Whether LLM must provide this field  
+      instructions: string;    // Field-specific instructions for extraction
+      dataType: string;        // Data type description
+      example?: string;        // Example value
+    }>;
     
     // Quality Control
     requireAllFields: boolean;  // Whether all schema fields are required
     confidenceThreshold?: number; // Minimum confidence score (0-1)
 
-    // Per-field requirements (overrides requireAllFields if provided)
+    // Per-field requirements (overrides requireAllFields if provided) 
     requiredFields?: string[];   // Keys from extractionSchema that are mandatory
   };
 
@@ -246,6 +293,37 @@ export interface ScheduleConfig {
   rateLimit: {
     maxRequestsPerMinute: number;
     concurrency: number;
+  };
+  deletion: {
+    // Regular deletion checks (runs with same interval as discovery)
+    regularChecks: {
+      enabled: boolean;
+      checkMissingFromList: boolean;  // Mark for deletion if job removed from list
+      maxJobAgedays: number;          // Mark for deletion after X days since first discovered
+    };
+    
+    // Keyword-based deletion checks
+    keywordChecks: {
+      enabled: boolean;
+      schedule: {
+        type: "cron" | "interval";
+        expression?: string;         // Cron expression for keyword checks
+        intervalMinutes?: number;    // Alternative interval in minutes
+      };
+      rules: Array<{
+        id: string;
+        name: string;               // User-friendly name for this rule
+        keywords: string[];         // Keywords to search for (e.g., "No longer accepting")
+        selectors: string[];        // CSS selectors where to look for keywords
+        caseSensitive: boolean;     // Whether keyword matching is case-sensitive
+      }>;
+    };
+    
+    // Application deadline checks
+    deadlineChecks: {
+      enabled: boolean;
+      gracePeriodDays: number;      // Extra days after application deadline before marking for deletion
+    };
   };
 }
 

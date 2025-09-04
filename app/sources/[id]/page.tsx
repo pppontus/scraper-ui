@@ -11,20 +11,29 @@ import {
   Download,
   Globe,
   FileText,
-  History
+  History,
+  Save,
+  CheckCircle
 } from "lucide-react";
 import mockData from "@/lib/mock-data.json";
 import { formatTimestamp, formatCost, cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SourceConfig } from "@/lib/types";
+import { LLMConfigForm } from "@/components/config/LLMConfigForm";
+import { SourceBasicsForm } from "@/components/config/SourceBasicsForm";
+import { DiscoveryConfigForm } from "@/components/config/DiscoveryConfigForm";
+import { ExtractionConfigForm } from "@/components/config/ExtractionConfigForm";
+import { ScheduleConfigForm } from "@/components/config/ScheduleConfigForm";
 
-type TabId = "overview" | "logs" | "history";
+type TabId = "overview" | "logs" | "history" | "settings";
 
-export default function SourceDetailPage({ params }: { params: { id: string } }) {
+export default function SourceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = React.use(params);
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [testResults, setTestResults] = useState<Record<string, any>>({});
 
-  const source = mockData.sources.find(s => s.id === params.id) || mockData.sources[0];
+  const source = mockData.sources.find(s => s.id === resolvedParams.id) || mockData.sources[0];
   const recentRuns = mockData.runs.filter(r => r.sourceId === source.id);
 
   const toggleSection = (section: string) => {
@@ -68,7 +77,8 @@ export default function SourceDetailPage({ params }: { params: { id: string } })
   const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: Globe },
     { id: "logs", label: "Logs", icon: FileText },
-    { id: "history", label: "History", icon: History }
+    { id: "history", label: "History", icon: History },
+    { id: "settings", label: "Settings", icon: Settings }
   ];
 
   return (
@@ -137,6 +147,7 @@ export default function SourceDetailPage({ params }: { params: { id: string } })
           {activeTab === "overview" && <OverviewTab source={source} recentRuns={recentRuns} />}
           {activeTab === "logs" && <LogsTab runs={recentRuns} />}
           {activeTab === "history" && <HistoryTab runs={recentRuns} />}
+          {activeTab === "settings" && <SettingsTab source={source} />}
         </div>
       </div>
     </div>
@@ -470,6 +481,182 @@ function LogEntry({ level, timestamp, step, message }: any) {
       </span>
       <span className="text-gray-600">[{step}]</span>
       <span className="text-gray-900 flex-1">{message}</span>
+    </div>
+  );
+}
+
+type SettingsTabId = "basics" | "discovery" | "extraction" | "llm" | "schedule";
+
+function SettingsTab({ source }: { source: any }) {
+  const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTabId>("basics");
+  const [settingsSaved, setSettingsSaved] = useState(false);
+  
+  // Use parent component's sourceConfig state - for now using local state
+  const [sourceConfig, setSourceConfig] = useState<SourceConfig>(() => ({
+    id: source.id,
+    name: source.name,
+    siteUrl: source.siteUrl,
+    notes: source.notes || "",
+    discovery: {
+      enabled: true,
+      technique: source.discoveryTechnique as any,
+      config: {}
+    },
+    extraction: {
+      enabled: true, 
+      technique: source.extractionTechnique as any,
+      config: {
+        navigation: { type: "direct" },
+        rendering: { technique: source.extractionTechnique as any },
+        crawl4ai: {
+          enabled: true,
+          contentSelection: {
+            excludeExternalLinks: true,
+            excludeExternalImages: true
+          },
+          markdownStrategy: { type: "fit" }
+        },
+        llm: {
+          enabled: true,
+          model: "gpt-4o-mini",
+          temperature: 0.1,
+          maxTokens: 2000,
+          retries: 3,
+          systemPrompt: "Extract structured job information from the provided markdown content.",
+          extractionSchema: {},
+          outputFormat: "json",
+          requireAllFields: false,
+          schemaConfig: undefined
+        },
+        selectors: { title: "", description: "" },
+        parallelism: { maxConcurrent: 5, delayBetween: 1000, retryCount: 3 }
+      }
+    },
+    save: {
+      upsertKeys: ["siteUrl", "jobUrl"],
+      softDeleteRules: { missing: true },
+      validation: { requireTitle: true, requireUrl: true, skipEmptyDescription: false }
+    },
+    schedule: {
+      discovery: { enabled: true, type: "cron", expression: "0 */6 * * *" },
+      extraction: { enabled: true, trigger: "on_discovery" },
+      rateLimit: { maxRequestsPerMinute: 30, concurrency: 5 },
+      deletion: {
+        regularChecks: { enabled: false, checkMissingFromList: false, maxJobAgedays: 60 },
+        keywordChecks: { enabled: false, schedule: { type: "interval", intervalMinutes: 1440 }, rules: [] },
+        deadlineChecks: { enabled: false, gracePeriodDays: 0 }
+      }
+    }
+  }));
+
+  const handleSave = () => {
+    console.log("Saving source config:", sourceConfig);
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 3000);
+  };
+
+  const settingsTabs: { id: SettingsTabId; label: string; icon: React.ElementType }[] = [
+    { id: "basics", label: "Basics", icon: Globe },
+    { id: "discovery", label: "Discovery", icon: Eye },
+    { id: "extraction", label: "Extraction", icon: FileText },
+    { id: "llm", label: "LLM Schema", icon: Settings },
+    { id: "schedule", label: "Schedule", icon: History }
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Settings Header with Save Button */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Source Configuration</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Configure discovery, extraction, and LLM settings for this source
+            </p>
+          </div>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            {settingsSaved ? (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                Saved
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Changes
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Settings Tabs */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8 px-6">
+            {settingsTabs.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSettingsTab(tab.id)}
+                  className={cn(
+                    "py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors",
+                    activeSettingsTab === tab.id
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Settings Content */}
+        <div className="p-6">
+          {activeSettingsTab === "basics" && (
+            <SourceBasicsForm
+              config={sourceConfig}
+              setConfig={setSourceConfig}
+              variant="settings"
+            />
+          )}
+          {activeSettingsTab === "discovery" && (
+            <DiscoveryConfigForm
+              config={sourceConfig}
+              setConfig={setSourceConfig}
+              variant="settings"
+            />
+          )}
+          {activeSettingsTab === "extraction" && (
+            <ExtractionConfigForm
+              config={sourceConfig}
+              setConfig={setSourceConfig}
+              variant="settings"
+            />
+          )}
+          {activeSettingsTab === "llm" && (
+            <LLMConfigForm
+              config={sourceConfig}
+              setConfig={setSourceConfig}
+              variant="settings"
+            />
+          )}
+          {activeSettingsTab === "schedule" && (
+            <ScheduleConfigForm
+              config={sourceConfig}
+              setConfig={setSourceConfig}
+              variant="settings"
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

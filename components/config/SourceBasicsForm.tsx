@@ -1,5 +1,4 @@
 import React from "react";
-import { Search } from "lucide-react";
 import { SourceConfig } from "@/lib/types";
 
 interface SourceBasicsFormProps {
@@ -54,32 +53,6 @@ export function SourceBasicsForm({
         </div>
       </div>
       
-      {variant === 'wizard' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Search className="h-4 w-4 text-blue-600" />
-            <span className="font-medium text-blue-900">Two-Step Scraping Approach</span>
-          </div>
-          <p className="text-sm text-blue-700">
-            This scraper uses a two-step approach: first <strong>find jobs</strong> by discovering URLs, 
-            then <strong>extract details</strong> from each job page. You'll configure the 
-            technique for each step separately.
-          </p>
-        </div>
-      )}
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Notes (Optional)
-        </label>
-        <textarea
-          value={config.notes || ""}
-          onChange={(e) => setConfig({ ...config, notes: e.target.value })}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Any additional notes about this source..."
-        />
-      </div>
     </div>
   );
 }

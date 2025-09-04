@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { SourceConfig } from "@/lib/types";
 import { ApiFieldPicker } from "../sources/wizard/components/ApiFieldPicker";
+import { PopupAndCookieForm } from "../sources/wizard/components/PopupAndCookieForm";
 
 interface ExtractionConfigFormProps {
   config: SourceConfig;
@@ -152,6 +153,7 @@ function HtmlJsConfiguration({ config, setConfig, updateExtractionConfig, discov
   const initialUrl = discoveredUrls?.[0] || "";
   const [sampleUrl, setSampleUrl] = useState<string>(initialUrl);
   const [preview, setPreview] = useState<{ request: string; markdown: string } | null>(null);
+  const showPopupForm = config.discovery?.technique !== 'js' && config.extraction?.technique === 'js';
 
   const onTestSample = (urlOverride?: string) => {
     const targetUrl = urlOverride || sampleUrl;
@@ -165,6 +167,25 @@ function HtmlJsConfiguration({ config, setConfig, updateExtractionConfig, discov
 
   return (
     <div className="space-y-6">
+      {/* Page Prep: Cookies & Popups (only if discovery is not JS and extraction is JS) */}
+      {showPopupForm && (
+        <PopupAndCookieForm
+          technique="js"
+          value={config.extraction.config.popupHandling}
+          existingInteractions={rendering.interactions || []}
+          existingCustomJS={rendering.customJS || ''}
+          onUpdate={({ popupHandling, interactions, customJS }) => {
+            updateExtractionConfig({
+              popupHandling,
+              rendering: {
+                ...(rendering || { technique: 'js' }),
+                interactions,
+                customJS,
+              }
+            });
+          }}
+        />
+      )}
       {/* Rendering Settings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

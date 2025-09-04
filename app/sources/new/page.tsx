@@ -120,7 +120,9 @@ export default function NewSourcePage() {
           },
           outputFormat: "json",
           requireAllFields: false,
-          confidenceThreshold: 0.7
+          confidenceThreshold: 0.7,
+          // Initialize with enhanced schema config - will be loaded from FULL_JOB_SCHEMA
+          schemaConfig: undefined 
         },
         // Legacy selectors (for backwards compatibility)
         selectors: {
@@ -149,7 +151,7 @@ export default function NewSourcePage() {
       discovery: {
         enabled: true,
         type: "cron",
-        expression: "0 */2 * * *" // Every 2 hours
+        expression: "0 */2 * * *", // Every 2 hours
       },
       extraction: {
         enabled: true,
@@ -158,6 +160,25 @@ export default function NewSourcePage() {
       rateLimit: {
         maxRequestsPerMinute: 30,
         concurrency: 5
+      },
+      deletion: {
+        regularChecks: {
+          enabled: false,
+          checkMissingFromList: false,
+          maxJobAgedays: 60
+        },
+        keywordChecks: {
+          enabled: false,
+          schedule: {
+            type: "interval",
+            intervalMinutes: 1440, // Daily
+          },
+          rules: []
+        },
+        deadlineChecks: {
+          enabled: false,
+          gracePeriodDays: 0
+        }
       }
     }
   });
