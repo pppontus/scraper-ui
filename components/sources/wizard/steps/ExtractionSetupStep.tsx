@@ -146,17 +146,17 @@ export function ExtractionSetupStep({ config, setConfig }: ExtractionSetupStepPr
 function HtmlJsConfiguration({ config, setConfig, updateExtractionConfig, discoveredUrls }: any) {
   const crawl4aiConfig = config.extraction.config.crawl4ai || {};
   const rendering = config.extraction.config.rendering || { technique: config.extraction.technique };
-  const queued = config.testResults?.previewQueue || [];
-  const initialUrl = queued[0] || discoveredUrls?.[0] || "";
+  const initialUrl = discoveredUrls?.[0] || "";
   const [sampleUrl, setSampleUrl] = useState<string>(initialUrl);
   const [preview, setPreview] = useState<{ request: string; markdown: string } | null>(null);
 
-  const onTestSample = () => {
-    if (!sampleUrl) return;
-    const req = `${rendering.technique === 'js' ? 'JS render' : 'HTML fetch'} ${sampleUrl}` +
+  const onTestSample = (urlOverride?: string) => {
+    const targetUrl = urlOverride || sampleUrl;
+    if (!targetUrl) return;
+    const req = `${rendering.technique === 'js' ? 'JS render' : 'HTML fetch'} ${targetUrl}` +
       (rendering.waitFor ? ` • waitFor=${rendering.waitFor}` : '') +
       (rendering.timeout ? ` • timeout=${rendering.timeout}ms` : '');
-    const md = `# Job Details\n\nURL: ${sampleUrl}\n\n**Title:** Example Title\n**Company:** Example Company\n\n## Content\nRendered content extracted from ${crawl4aiConfig.contentSelection?.cssSelector || crawl4aiConfig.contentSelection?.targetElements?.join(', ') || 'main region'}...\n`;
+    const md = `# Job Details\n\nURL: ${targetUrl}\n\n**Title:** Example Title\n**Company:** Example Company\n\n## Content\nRendered content extracted from ${crawl4aiConfig.contentSelection?.cssSelector || crawl4aiConfig.contentSelection?.targetElements?.join(', ') || 'main region'}...\n`;
     setPreview({ request: req, markdown: md });
   };
 
@@ -312,53 +312,33 @@ function HtmlJsConfiguration({ config, setConfig, updateExtractionConfig, discov
 
       {/* Sample test (inline) */}
       <div className="border rounded p-4 bg-gray-50 space-y-3">
-        {/* Primary: pick from discovered with inline button */}
         {discoveredUrls?.length > 0 ? (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sample URL</label>
-            <div className="flex items-center gap-2">
-              <select
-                value={sampleUrl}
-                onChange={(e) => setSampleUrl(e.target.value)}
-                className="flex-1 px-3 py-2 border rounded"
-              >
-                {discoveredUrls.slice(0, 20).map((u: string) => (
-                  <option key={u} value={u}>{u}</option>
-                ))}
-              </select>
-              <button type="button" onClick={onTestSample} className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap">Generate Markdown Preview</button>
+            <div className="text-sm font-medium text-gray-800 mb-2">Discovered URLs</div>
+            <div className="space-y-1">
+              {discoveredUrls.map((u: string, i: number) => (
+                <div key={i} className="flex items-center justify-between gap-2">
+                  <div className="truncate font-mono text-sm flex-1">{u}</div>
+                  <button
+                    type="button"
+                    className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    onClick={() => onTestSample(u)}
+                  >
+                    Generate Markdown
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         ) : (
           <div className="text-sm text-gray-600">No discovered URLs yet. Run the Find Jobs step to populate sample URLs.</div>
         )}
 
-        {/* Queued URLs from discovery */}
-        {queued.length > 0 && (
-          <div>
-            <div className="text-xs text-gray-600 mb-1">Queued from discovery</div>
-            <div className="space-y-1">
-              {queued.map((u: string, i: number) => (
-                <div key={i} className="flex items-center justify-between gap-2">
-                  <div className="truncate font-mono text-sm flex-1">{u}</div>
-                  <div className="flex items-center gap-2">
-                    <button type="button" className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700" onClick={() => { setSampleUrl(u); onTestSample(); }}>Generate</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {preview && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-              <div className="text-xs font-medium text-gray-700 mb-1">Request</div>
-              <div className="bg-white border rounded p-2 font-mono text-[11px] whitespace-pre-wrap break-all">{preview.request}</div>
-            </div>
-            <div className="md:col-span-2">
-              <div className="text-xs font-medium text-gray-700 mb-1">Markdown Preview</div>
-              <div className="bg-white border rounded p-2 font-mono text-[11px] whitespace-pre-wrap max-h-40 overflow-auto">{preview.markdown}</div>
+          <div>
+            <div className="text-xs font-medium text-gray-700 mb-1">Markdown Preview</div>
+            <div className="bg-white border rounded p-3 font-mono text-[12px] whitespace-pre-wrap max-h-80 overflow-auto">
+              {preview.markdown}
             </div>
           </div>
         )}

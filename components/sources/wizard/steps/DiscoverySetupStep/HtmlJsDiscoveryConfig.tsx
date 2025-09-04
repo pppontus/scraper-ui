@@ -1,5 +1,5 @@
 import React from "react";
-import { Globe, CheckCircle, X, AlertCircle, PlayCircle } from "lucide-react";
+import { Globe, CheckCircle, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SourceConfig } from "@/lib/types";
 import { getLinkMatchType, getMatchReason } from "../../utils/pattern-matching";
@@ -50,11 +50,9 @@ export function HtmlJsDiscoveryConfig({
       {/* Pagination Settings */}
       <div>
         <h3 className="font-medium text-gray-900 mb-3">Pagination</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Pagination Type
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Strategy</label>
             <select
               value={getSafeScrapingConfig().pagination.type}
               onChange={(e) => {
@@ -62,47 +60,119 @@ export function HtmlJsDiscoveryConfig({
                 updateDiscoveryConfig({
                   scraping: {
                     ...safe,
-                    pagination: {
-                      ...safe.pagination,
-                      type: e.target.value as any
-                    }
+                    pagination: { ...safe.pagination, type: e.target.value as any }
                   }
                 });
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="numbered">Numbered Pages (1, 2, 3...)</option>
-              <option value="next-link">Next Link</option>
-              <option value="load-more">Load More Button</option>
-              <option value="infinite">Infinite Scroll</option>
+              <option value="numbered">Numbered pages</option>
+              <option value="next-link">Next link</option>
+              <option value="load-more">Load more button</option>
+              <option value="infinite">Infinite scroll</option>
+              <option value="virtual">Virtual list</option>
             </select>
           </div>
-          
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Max Pages
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Max pages</label>
             <input
               type="number"
-              value={getSafeScrapingConfig().pagination.maxPages}
+              value={getSafeScrapingConfig().pagination.maxPages || 10}
               onChange={(e) => {
                 const safe = getSafeScrapingConfig();
                 updateDiscoveryConfig({
                   scraping: {
                     ...safe,
-                    pagination: {
-                      ...safe.pagination,
-                      maxPages: parseInt(e.target.value)
-                    }
+                    pagination: { ...safe.pagination, maxPages: parseInt(e.target.value) || 0 }
                   }
                 });
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               min="1"
-              max="100"
+              max="500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Stop condition (optional)</label>
+            <input
+              type="text"
+              value={getSafeScrapingConfig().pagination.stopCondition || ''}
+              onChange={(e) => {
+                const safe = getSafeScrapingConfig();
+                updateDiscoveryConfig({
+                  scraping: {
+                    ...safe,
+                    pagination: { ...safe.pagination, stopCondition: e.target.value }
+                  }
+                });
+              }}
+              placeholder="e.g., no new links appear"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
           </div>
         </div>
+
+        {/* Strategy-specific fields */}
+        {(() => {
+          const p = getSafeScrapingConfig().pagination;
+          if (p.type === 'next-link' || p.type === 'numbered') {
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Next link selector</label>
+                  <input
+                    type="text"
+                    value={p.nextSelector || ''}
+                    onChange={(e) => updateDiscoveryConfig({ scraping: { ...getSafeScrapingConfig(), pagination: { ...p, nextSelector: e.target.value } } })}
+                    className="w-full px-3 py-2 border rounded"
+                    placeholder="a.next, button.next"
+                  />
+                </div>
+              </div>
+            );
+          }
+          if (p.type === 'load-more') {
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Load more selector</label>
+                  <input
+                    type="text"
+                    value={p.loadMoreSelector || ''}
+                    onChange={(e) => updateDiscoveryConfig({ scraping: { ...getSafeScrapingConfig(), pagination: { ...p, loadMoreSelector: e.target.value } } })}
+                    className="w-full px-3 py-2 border rounded"
+                    placeholder="button.load-more"
+                  />
+                </div>
+              </div>
+            );
+          }
+          if (p.type === 'infinite' || p.type === 'virtual') {
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Scroll count</label>
+                  <input
+                    type="number"
+                    value={p.scrollCount || 5}
+                    onChange={(e) => updateDiscoveryConfig({ scraping: { ...getSafeScrapingConfig(), pagination: { ...p, scrollCount: parseInt(e.target.value) || 0 } } })}
+                    className="w-full px-3 py-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Scroll delay (ms)</label>
+                  <input
+                    type="number"
+                    value={p.scrollDelay || 800}
+                    onChange={(e) => updateDiscoveryConfig({ scraping: { ...getSafeScrapingConfig(), pagination: { ...p, scrollDelay: parseInt(e.target.value) || 0 } } })}
+                    className="w-full px-3 py-2 border rounded"
+                  />
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
       
       {/* Step 1: Content Area Detection & Link Discovery */}
@@ -395,27 +465,7 @@ function PatternFiltering({ config, getSafeScrapingConfig, updateDiscoveryConfig
                         {getMatchReason(link.url, linkFiltering)}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {matchType === 'included' && (
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-                          title="Queue for extraction preview"
-                          onClick={() => {
-                            setConfig((prev: any) => ({
-                              ...prev,
-                              testResults: {
-                                ...prev.testResults,
-                                previewQueue: Array.from(new Set([...(prev.testResults?.previewQueue || []), link.url]))
-                              }
-                            }));
-                          }}
-                        >
-                          <PlayCircle className="h-3.5 w-3.5" />
-                          Preview
-                        </button>
-                      )}
-                    </div>
+                    <div className="flex items-center gap-2" />
                   </div>
                 </div>
               );

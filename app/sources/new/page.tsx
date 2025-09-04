@@ -3,16 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  TestTube2,
-  Save,
-  Search,
-  FileText,
-  CheckCircle,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Save, Search, FileText, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SourceConfig } from "@/lib/types";
 
@@ -23,13 +14,7 @@ import { ALL_STEPS, STORAGE_KEY, StepId } from "@/components/sources/wizard/cons
 import { BasicsStep } from "@/components/sources/wizard/steps/BasicsStep";
 import { DiscoverySetupStep } from "@/components/sources/wizard/steps/DiscoverySetupStep";
 import { ExtractionSetupStep } from "@/components/sources/wizard/steps/ExtractionSetupStep";
-import { TestExtractionStep } from "@/components/sources/wizard/steps/TestExtractionStep";
-import {
-  LLMStep,
-  SaveStep,
-  ScheduleStep,
-  ReviewStep
-} from "@/components/sources/wizard/steps/PlaceholderSteps";
+import { LLMStep, ScheduleStep, ReviewStep } from "@/components/sources/wizard/steps/PlaceholderSteps";
 
 export default function NewSourcePage() {
   const router = useRouter();
@@ -431,14 +416,9 @@ export default function NewSourcePage() {
           {currentStep?.id === "extraction_setup" && (
             <ExtractionSetupStep config={sourceConfig} setConfig={setSourceConfig} />
           )}
-          {currentStep?.id === "test_extraction" && (
-            <TestExtractionStep config={sourceConfig} setConfig={setSourceConfig} />
-          )}
+          
           {currentStep?.id === "llm" && (
             <LLMStep config={sourceConfig} setConfig={setSourceConfig} />
-          )}
-          {currentStep?.id === "save" && (
-            <SaveStep config={sourceConfig} setConfig={setSourceConfig} />
           )}
           {currentStep?.id === "schedule" && (
             <ScheduleStep config={sourceConfig} setConfig={setSourceConfig} />
@@ -467,12 +447,6 @@ export default function NewSourcePage() {
           </button>
 
           <div className="flex items-center gap-2">
-            {currentStep?.id === "test_extraction" && (
-              <div className="text-sm text-gray-600 flex items-center gap-2">
-                <TestTube2 className="h-4 w-4" />
-                Test your configuration before proceeding
-              </div>
-            )}
             {currentStep?.id === "review" ? (
               <button
                 onClick={handleFinish}
@@ -484,13 +458,10 @@ export default function NewSourcePage() {
             ) : (
               <button
                 onClick={handleNext}
-                disabled={
-                  (currentStep?.id === "test_extraction" && !sourceConfig.testResults?.extraction)
-                }
+                
                 className={cn(
                   "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2",
-                  (currentStep?.id === "test_extraction" && !sourceConfig.testResults?.extraction) &&
-                  "bg-gray-400 cursor-not-allowed"
+                  
                 )}
               >
                 Next

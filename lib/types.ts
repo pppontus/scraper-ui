@@ -163,6 +163,9 @@ export interface ExtractionConfig {
     // Quality Control
     requireAllFields: boolean;  // Whether all schema fields are required
     confidenceThreshold?: number; // Minimum confidence score (0-1)
+
+    // Per-field requirements (overrides requireAllFields if provided)
+    requiredFields?: string[];   // Keys from extractionSchema that are mandatory
   };
 
   // Legacy content selection (deprecated, use crawl4ai.contentSelection)
@@ -194,6 +197,12 @@ export interface PaginationConfig {
   offsetParam?: string;
   cursorParam?: string;
   pageSize?: number;
+  // Extended pagination support
+  maxPages?: number;           // Safety cap for number of pages to fetch
+  delayMs?: number;            // Delay between page requests
+  nextLinkPath?: string;       // JSONPath to next link in response body
+  nextCursorPath?: string;     // JSONPath to next cursor/token in response body
+  stopCondition?: string;      // Optional human-readable stop condition
 }
 
 export interface LLMConfig {
@@ -267,8 +276,6 @@ export interface TestResults {
     duration: number;
     timestamp: Date;
   };
-  // URLs user queued from discovery to preview in extraction setup
-  previewQueue?: string[];
 }
 
 export interface SourceConfig {

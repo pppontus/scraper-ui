@@ -1,22 +1,12 @@
 import React from "react";
-import {
-  Globe,
-  Search,
-  FileText,
-  Eye,
-  Database,
-  Calendar,
-  CheckCircle,
-} from "lucide-react";
+import { Globe, Search, FileText, Database, Calendar, CheckCircle } from "lucide-react";
 
-export type StepId = 
-  | "basics" 
-  | "discovery_setup" 
-  | "extraction_setup" 
-  | "test_extraction" 
-  | "llm" 
-  | "save" 
-  | "schedule" 
+export type StepId =
+  | "basics"
+  | "discovery_setup"
+  | "extraction_setup"
+  | "llm"
+  | "schedule"
   | "review";
 
 export interface StepConfig {
@@ -45,29 +35,12 @@ export const ALL_STEPS: StepConfig[] = [
     icon: FileText, 
     description: "Configure how to extract job details"
   },
-  { 
-    id: "test_extraction", 
-    label: "Test Extract", 
-    icon: Eye, 
-    description: "Test data extraction with sample URLs"
-  },
-  { 
-    id: "llm", 
-    label: "LLM Parsing", 
-    icon: Database, 
-    description: "Configure AI-powered data parsing"
-  },
-  { 
-    id: "save", 
-    label: "Save", 
-    icon: Database, 
-    description: "Database storage configuration"
-  },
+  { id: "llm", label: "LLM Parsing", icon: Database, description: "Configure AI-powered data parsing" },
   { 
     id: "schedule", 
     label: "Schedule", 
     icon: Calendar, 
-    description: "Set up discovery and extraction schedules"
+    description: "Set up discovery schedule and rate limits"
   },
   { 
     id: "review", 

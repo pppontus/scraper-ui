@@ -219,6 +219,151 @@ function ApiDiscoveryConfig({ config, setConfig, updateDiscoveryConfig }: any) {
         </div>
       </div>
       
+      {/* Pagination */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <h3 className="font-medium text-gray-900 mb-3">Pagination</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Strategy</label>
+            <select
+              value={config.discovery.config.api?.pagination?.type || 'none'}
+              onChange={(e) => updateDiscoveryConfig({
+                api: {
+                  ...config.discovery.config.api,
+                  pagination: { ...(config.discovery.config.api?.pagination || {}), type: e.target.value }
+                }
+              })}
+              className="w-full px-3 py-2 border rounded"
+            >
+              <option value="none">None</option>
+              <option value="page">Page number</option>
+              <option value="offset">Offset</option>
+              <option value="cursor">Cursor</option>
+              <option value="link">Link-based</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Max pages</label>
+            <input
+              type="number"
+              value={config.discovery.config.api?.pagination?.maxPages || 3}
+              onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), maxPages: parseInt(e.target.value) || 0 } } })}
+              className="w-full px-3 py-2 border rounded"
+              min={1}
+              max={500}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Delay between pages (ms)</label>
+            <input
+              type="number"
+              value={config.discovery.config.api?.pagination?.delayMs || 0}
+              onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), delayMs: parseInt(e.target.value) || 0 } } })}
+              className="w-full px-3 py-2 border rounded"
+              min={0}
+              step={100}
+            />
+          </div>
+          {(['page'] as const).includes((config.discovery.config.api?.pagination?.type || 'none') as any) && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">pageParam</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.pageParam || 'page'}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), pageParam: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">pageSize/limit</label>
+                <input
+                  type="number"
+                  value={config.discovery.config.api?.pagination?.pageSize || 25}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), pageSize: parseInt(e.target.value) || 0 } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+            </>
+          )}
+          {(['offset'] as const).includes((config.discovery.config.api?.pagination?.type || 'none') as any) && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">offsetParam</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.offsetParam || 'offset'}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), offsetParam: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">limitParam</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.limitParam || 'limit'}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), limitParam: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+            </>
+          )}
+          {(['cursor'] as const).includes((config.discovery.config.api?.pagination?.type || 'none') as any) && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">cursorParam</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.cursorParam || 'cursor'}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), cursorParam: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">pageSize/limit</label>
+                <input
+                  type="number"
+                  value={config.discovery.config.api?.pagination?.pageSize || 25}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), pageSize: parseInt(e.target.value) || 0 } } })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">nextCursorPath (JSONPath)</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.nextCursorPath || ''}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), nextCursorPath: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="$.meta.next_cursor or $.paging.next"
+                />
+              </div>
+            </>
+          )}
+          {(['link'] as const).includes((config.discovery.config.api?.pagination?.type || 'none') as any) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div className="md:col-span-2 text-xs text-gray-600">
+                Link-based pagination is resolved from server-provided links (e.g., HTTP Link headers or next URLs in payload).
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">nextLinkPath (JSONPath)</label>
+                <input
+                  value={config.discovery.config.api?.pagination?.nextLinkPath || ''}
+                  onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), nextLinkPath: e.target.value } } })}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="$.links.next or $.meta.next"
+                />
+              </div>
+            </div>
+          )}
+          <div className="mt-4 md:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Stop condition (optional)</label>
+            <input
+              type="text"
+              value={config.discovery.config.api?.pagination?.stopCondition || ''}
+              onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), stopCondition: e.target.value } } })}
+              placeholder="e.g., empty items array or no next token"
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Custom Headers */}
       <div>
         <h3 className="font-medium text-gray-900 mb-3">Custom Headers</h3>
@@ -258,6 +403,65 @@ function ApiDiscoveryConfig({ config, setConfig, updateDiscoveryConfig }: any) {
 
       {/* Test API and Select Job URLs */}
       <ApiTestAndSelection config={config} setConfig={setConfig} />
+
+      {/* Pagination helpers (mock) */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="px-3 py-2 bg-white border rounded hover:bg-gray-100 text-sm"
+            onClick={() => {
+              updateDiscoveryConfig({
+                api: {
+                  ...config.discovery.config.api,
+                  pagination: {
+                    ...(config.discovery.config.api?.pagination || {}),
+                    type: 'page', pageParam: 'page', pageSize: 25,
+                    maxPages: config.discovery.config.api?.pagination?.maxPages || 3
+                  }
+                }
+              });
+            }}
+          >
+            Auto-detect from response
+          </button>
+          <button
+            type="button"
+            className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+            onClick={() => {
+              const p = config.discovery.config.api?.pagination || { type: 'none' };
+              const base = config.discovery.config.api?.endpoint || 'https://api.example.com/jobs';
+              const pages = Math.min(p.maxPages || 3, 3);
+              const preview: string[] = [];
+              for (let i = 1; i <= pages; i++) {
+                if (p.type === 'page') {
+                  const param = p.pageParam || 'page';
+                  const size = p.pageSize || 25;
+                  preview.push(`${base}?${param}=${i}&limit=${size}`);
+                } else if (p.type === 'offset') {
+                  const off = p.offsetParam || 'offset';
+                  const lim = p.limitParam || 'limit';
+                  const size = p.pageSize || 25;
+                  preview.push(`${base}?${off}=${(i-1)*size}&${lim}=${size}`);
+                } else if (p.type === 'cursor') {
+                  const cur = p.cursorParam || 'cursor';
+                  preview.push(`${base}?${cur}=<cursor_${i}>`);
+                } else if (p.type === 'link') {
+                  preview.push(`${base}  (follow next from ${p.nextLinkPath || 'response'})`);
+                } else {
+                  preview.push(base);
+                }
+              }
+              window.alert(`Preview pagination (mock)\n` + preview.join('\n'));
+            }}
+          >
+            Preview pagination
+          </button>
+        </div>
+        <div className="text-xs text-gray-600 mt-2">
+          These are mock helpers to clarify configuration; backend integration will power real previews later.
+        </div>
+      </div>
     </div>
   );
 }
