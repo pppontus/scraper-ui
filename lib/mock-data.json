@@ -342,7 +342,8 @@
       "schedule": "0 */6 * * *",
       "includeRegions": [".main-content", ".content", "main"],
       "excludeRegions": [".nav", ".footer", ".sidebar", ".ads"],
-      "costCapWarning": 50
+      "costCapWarning": 50,
+      "costAlertEmail": "pontus@example.com"
     },
     "auth": {
       "password": {

@@ -366,16 +366,30 @@ function DefaultsTab({ settings }: any) {
           <DollarSign className="h-5 w-5" />
           Cost Management
         </h3>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Cost Cap Warning (SEK per day)
-          </label>
-          <input
-            type="number"
-            defaultValue={settings.defaults.costCapWarning}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-          <p className="mt-1 text-xs text-gray-500">Alert when daily cost exceeds this amount</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cost Cap Warning (SEK per day)
+            </label>
+            <input
+              type="number"
+              defaultValue={settings.defaults.costCapWarning}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+            <p className="mt-1 text-xs text-gray-500">Alert when daily cost exceeds this amount</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Alert Email Address
+            </label>
+            <input
+              type="email"
+              defaultValue={settings.defaults.costAlertEmail}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              placeholder="your-email@example.com"
+            />
+            <p className="mt-1 text-xs text-gray-500">Email address to notify when cost limits are exceeded</p>
+          </div>
         </div>
       </div>
     </div>

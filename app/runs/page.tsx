@@ -17,6 +17,7 @@ import {
 import mockData from "@/lib/mock-data.json";
 import { formatTimestamp, formatCost, cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { FullLogsModal } from "@/components/FullLogsModal";
 
 export default function RunsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,6 +25,10 @@ export default function RunsPage() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [logsModal, setLogsModal] = useState<{ isOpen: boolean; run: any }>({
+    isOpen: false,
+    run: null
+  });
 
   const allRuns = [...mockData.runs].sort((a, b) => 
     new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
@@ -229,7 +234,7 @@ export default function RunsPage() {
                   {expandedRun === run.id && (
                     <tr>
                       <td colSpan={10} className="px-6 py-4 bg-gray-50">
-                        <RunDetails run={run} />
+                        <RunDetails run={run} onViewLogs={(run) => setLogsModal({ isOpen: true, run })} />
                       </td>
                     </tr>
                   )}
@@ -254,11 +259,18 @@ export default function RunsPage() {
           }s</strong></span>
         </div>
       </div>
+
+      {/* Full Logs Modal */}
+      <FullLogsModal
+        isOpen={logsModal.isOpen}
+        onClose={() => setLogsModal({ isOpen: false, run: null })}
+        run={logsModal.run}
+      />
     </div>
   );
 }
 
-function RunDetails({ run }: { run: any }) {
+function RunDetails({ run, onViewLogs }: { run: any; onViewLogs: (run: any) => void }) {
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
 
   const steps = run.steps ? Object.entries(run.steps) : [];
@@ -378,7 +390,10 @@ function RunDetails({ run }: { run: any }) {
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        <button className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+        <button 
+          onClick={() => onViewLogs(run)}
+          className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+        >
           <Eye className="h-3 w-3" />
           View Full Logs
         </button>
