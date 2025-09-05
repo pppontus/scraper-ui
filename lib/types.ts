@@ -79,7 +79,13 @@ export interface DiscoveryConfig {
       loadMoreSelector?: string;
       scrollCount?: number;
       scrollDelay?: number;
+      // Deprecated: free-text stop condition
       stopCondition?: string;
+      // New structured stop conditions
+      stop?: {
+        operator: 'any' | 'all';
+        conditions: ScrapeStopCondition[];
+      };
     };
 
     // Deduplication and validation
@@ -249,8 +255,32 @@ export interface PaginationConfig {
   delayMs?: number;            // Delay between page requests
   nextLinkPath?: string;       // JSONPath to next link in response body
   nextCursorPath?: string;     // JSONPath to next cursor/token in response body
+  // Deprecated: free-text stop condition
   stopCondition?: string;      // Optional human-readable stop condition
+  // New structured stop conditions
+  stop?: {
+    operator: 'any' | 'all';
+    conditions: ApiStopCondition[];
+  };
 }
+
+// Structured stop conditions for API discovery
+export type ApiStopCondition =
+  | { type: 'no_next_token'; nextCursorPath?: string }
+  | { type: 'empty_array'; itemsPath: string }
+  | { type: 'no_new_ids'; idPath: string; windowPages?: number }
+  | { type: 'http_status'; statuses: number[] }
+  | { type: 'max_age'; datePath: string; olderThanDays: number }
+  | { type: 'custom_jsonpath'; path: string; exists?: boolean; equals?: any };
+
+// Structured stop conditions for HTML/JS scraping
+export type ScrapeStopCondition =
+  | { type: 'no_new_links'; includePatterns?: string[]; checksWithoutChange?: number }
+  | { type: 'selector_present'; selector: string }
+  | { type: 'selector_missing'; selector: string }
+  | { type: 'text_present'; selector?: string; text: string }
+  | { type: 'button_missing_or_disabled'; selector: string }
+  | { type: 'max_scrolls_without_change'; scrolls: number };
 
 export interface LLMConfig {
   model: string;

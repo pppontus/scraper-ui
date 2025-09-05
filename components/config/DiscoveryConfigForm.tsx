@@ -3,6 +3,7 @@ import { Network } from "lucide-react";
 import { cn, parseCurl } from "@/lib/utils";
 import { SourceConfig, DiscoveryTechnique, DiscoveryConfig } from "@/lib/types";
 import { ApiTestAndSelection } from "../sources/wizard/components/ApiTestAndSelection";
+import { ApiStopConditionsBuilder } from "../sources/wizard/components/ApiStopConditionsBuilder";
 import { HtmlJsDiscoveryConfig } from "../sources/wizard/steps/DiscoverySetupStep/HtmlJsDiscoveryConfig";
 
 interface DiscoveryConfigFormProps {
@@ -362,13 +363,20 @@ function ApiDiscoveryConfig({ config, setConfig, updateDiscoveryConfig }: any) {
             </div>
           )}
           <div className="mt-4 md:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Stop condition (optional)</label>
-            <input
-              type="text"
-              value={config.discovery.config.api?.pagination?.stopCondition || ''}
-              onChange={(e) => updateDiscoveryConfig({ api: { ...config.discovery.config.api, pagination: { ...(config.discovery.config.api?.pagination || {}), stopCondition: e.target.value } } })}
-              placeholder="e.g., empty items array or no next token"
-              className="w-full px-3 py-2 border rounded"
+            <label className="block text-sm font-medium text-gray-700 mb-2">Stop conditions</label>
+            {config.discovery.config.api?.pagination?.stopCondition && (
+              <div className="mb-2 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-2">
+                Legacy stop condition detected: "{config.discovery.config.api.pagination.stopCondition}". This free-text field is deprecated; please re-create it using the structured builder below.
+              </div>
+            )}
+            <ApiStopConditionsBuilder
+              value={config.discovery.config.api?.pagination?.stop}
+              onChange={(val) => updateDiscoveryConfig({
+                api: {
+                  ...config.discovery.config.api,
+                  pagination: { ...(config.discovery.config.api?.pagination || {}), stop: val }
+                }
+              })}
             />
           </div>
         </div>

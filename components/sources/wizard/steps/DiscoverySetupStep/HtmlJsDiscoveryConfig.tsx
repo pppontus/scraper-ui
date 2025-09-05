@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { SourceConfig } from "@/lib/types";
 import { getLinkMatchType, getMatchReason } from "../../utils/pattern-matching";
 import { PopupAndCookieForm } from "../../components/PopupAndCookieForm";
+import { ScrapeStopConditionsBuilder } from "../../components/ScrapeStopConditionsBuilder";
 
 interface HtmlJsDiscoveryConfigProps {
   config: SourceConfig;
@@ -94,21 +95,23 @@ export function HtmlJsDiscoveryConfig({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Stop condition (optional)</label>
-            <input
-              type="text"
-              value={getSafeScrapingConfig().pagination.stopCondition || ''}
-              onChange={(e) => {
+            <label className="block text-sm font-medium text-gray-700 mb-2">Stop conditions</label>
+            {getSafeScrapingConfig().pagination.stopCondition && (
+              <div className="mb-2 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-2">
+                Legacy stop condition detected: "{getSafeScrapingConfig().pagination.stopCondition}". This free-text field is deprecated; please re-create it using the structured builder below.
+              </div>
+            )}
+            <ScrapeStopConditionsBuilder
+              value={getSafeScrapingConfig().pagination.stop}
+              onChange={(val) => {
                 const safe = getSafeScrapingConfig();
                 updateDiscoveryConfig({
                   scraping: {
                     ...safe,
-                    pagination: { ...safe.pagination, stopCondition: e.target.value }
+                    pagination: { ...safe.pagination, stop: val }
                   }
                 });
               }}
-              placeholder="e.g., no new links appear"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
           </div>
         </div>
