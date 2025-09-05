@@ -3,8 +3,10 @@ import { SourceConfig } from "@/lib/types";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { formatTimestamp } from "@/lib/utils";
-import { Calendar, Clock, FileText, List, Link as LinkIcon, ChevronDown, ChevronRight, Code, Table as TableIcon, Eye } from "lucide-react";
+import { Calendar, Clock, FileText, List, Link as LinkIcon, ChevronDown, ChevronRight, Code, Table as TableIcon, Eye, TestTube2 } from "lucide-react";
 import { DEFAULT_EXTRACTION_SCHEMA } from "../constants";
+import { useDryRun } from "../../../dry-run/useDryRun";
+import { DryRunResultsDisplay } from "../../../dry-run/DryRunResults";
 
 interface StepProps {
   config: SourceConfig;
@@ -296,42 +298,32 @@ export function ScheduleStep({ config, setConfig }: StepProps) {
 
 
 export function ReviewStep({ config }: { config: SourceConfig }) {
-  const discoveryRes = config.testResults?.discovery;
-  const extractionRes = config.testResults?.extraction;
+  const [isDryRunning, setIsDryRunning] = useState(false);
+  const [hasDryRun, setHasDryRun] = useState(false);
 
-  const jobs = useMemo(() => {
-    const discovered: Array<{ url: string; id?: string; title?: string; date?: string }> = [];
-    if (discoveryRes?.metadata?.length) {
-      for (const m of discoveryRes.metadata) {
-        if (m?.url) discovered.push({ url: m.url, id: m.id, title: m.title, date: m.date });
-      }
-    } else if (discoveryRes?.urls?.length) {
-      for (const u of discoveryRes.urls) discovered.push({ url: u });
+  const { currentStep, results, logs, restart, isComplete } = useDryRun({ 
+    isRunning: isDryRunning,
+    onComplete: () => {
+      setIsDryRunning(false);
+      setHasDryRun(true);
+    },
+    onError: () => {
+      setIsDryRunning(false);
     }
+  });
 
-    const extracted = new Map<string, (typeof extractionRes extends any ? any : never)>();
-    if (extractionRes?.artifacts?.length) {
-      for (const art of extractionRes.artifacts as any[]) {
-        if (art?.url) extracted.set(art.url, art);
-      }
-    }
+  const startDryRun = () => {
+    setIsDryRunning(true);
+    setHasDryRun(false);
+  };
 
-    return discovered.map((d) => ({
-      ...d,
-      extracted: extracted.get(d.url) || null,
-    }));
-  }, [discoveryRes, extractionRes]);
-
-  const jobsFound = discoveryRes?.urls?.length || discoveryRes?.metadata?.length || 0;
-  const extractedCount = extractionRes?.artifacts?.length || 0;
-  const discoveryDuration = discoveryRes?.duration ?? null;
-  const extractionDuration = extractionRes?.duration ?? null;
-
-  const [limit, setLimit] = useState(10);
-  const displayed = jobs.slice(0, limit);
+  const restartDryRun = () => {
+    restart();
+    setIsDryRunning(true);
+  };
 
   const humanizeSchedule = () => {
-    const tz = "Europe/Stockholm"; // aligns with constants
+    const tz = "Europe/Stockholm";
     if (!config.schedule?.discovery?.enabled) return `Manual: run on demand`;
     const expr = config.schedule.discovery.expression || "";
     if (!expr) return `Manual: run on demand`;
@@ -390,7 +382,7 @@ export function ReviewStep({ config }: { config: SourceConfig }) {
 
   return (
     <div className="space-y-6">
-      {/* Source summary */}
+      {/* Source Summary */}
       <Card>
         <CardHeader>
           <CardTitle>Source Summary</CardTitle>
@@ -423,23 +415,7 @@ export function ReviewStep({ config }: { config: SourceConfig }) {
         </CardContent>
       </Card>
 
-      {/* Overview KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KpiCard title="Jobs Found" value={jobsFound} icon={List} color="blue" />
-        <KpiCard title="Extracted" value={extractedCount} icon={FileText} color="green" />
-        <KpiCard
-          title="Duration"
-          value={
-            discoveryDuration != null || extractionDuration != null
-              ? `${discoveryDuration ?? 0}s disc / ${extractionDuration ?? 0}s ext`
-              : '—'
-          }
-          icon={Clock}
-          color="purple"
-        />
-      </div>
-
-      {/* Schedule summary */}
+      {/* Schedule Summary */}
       <Card>
         <CardHeader className="flex items-center justify-between">
           <CardTitle>Schedule</CardTitle>
@@ -453,36 +429,48 @@ export function ReviewStep({ config }: { config: SourceConfig }) {
         </CardContent>
       </Card>
 
-      {/* Parsed structured results */}
-      <ParsedResultsTable config={config} jobs={jobs as any} />
-
-      {/* Found jobs + details */}
+      {/* Dry Run Section */}
       <Card>
         <CardHeader className="flex items-center justify-between">
-          <CardTitle>Found Jobs and Details</CardTitle>
-          <div className="text-sm text-gray-600">{jobs.length} total</div>
+          <CardTitle className="flex items-center gap-2">
+            <TestTube2 className="h-5 w-5 text-purple-600" />
+            Test Your Scraper
+          </CardTitle>
+          {!isDryRunning && !hasDryRun && (
+            <button
+              onClick={startDryRun}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
+              <TestTube2 className="h-4 w-4" />
+              Run Test
+            </button>
+          )}
         </CardHeader>
         <CardContent>
-          {jobs.length === 0 ? (
-            <div className="text-gray-500">No discovery results yet. Run discovery in the previous steps.</div>
-          ) : (
-            <div className="space-y-2">
-              {displayed.map((job, idx) => (
-                <JobRow key={`${job.url}-${idx}`} job={job as any} />
-              ))}
-
-              {limit < jobs.length && (
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    className="px-3 py-2 text-sm border rounded hover:bg-gray-50"
-                    onClick={() => setLimit((l) => Math.min(jobs.length, l + 10))}
-                  >
-                    Show 10 more ({jobs.length - limit} remaining)
-                  </button>
-                </div>
-              )}
+          {!isDryRunning && !hasDryRun ? (
+            <div className="text-center py-8">
+              <TestTube2 className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready to Test</h3>
+              <p className="text-gray-600 mb-4">
+                Test your scraper configuration to see how it will discover and extract job data.
+              </p>
+              <button
+                onClick={startDryRun}
+                className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 mx-auto"
+              >
+                <TestTube2 className="h-4 w-4" />
+                Run Test
+              </button>
             </div>
+          ) : (
+            <DryRunResultsDisplay
+              currentStep={currentStep}
+              results={results}
+              logs={logs}
+              variant="inline"
+              onRestart={restartDryRun}
+              className="min-h-[200px]"
+            />
           )}
         </CardContent>
       </Card>

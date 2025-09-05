@@ -24,6 +24,7 @@ import { SourceBasicsForm } from "@/components/config/SourceBasicsForm";
 import { DiscoveryConfigForm } from "@/components/config/DiscoveryConfigForm";
 import { ExtractionConfigForm } from "@/components/config/ExtractionConfigForm";
 import { ScheduleConfigForm } from "@/components/config/ScheduleConfigForm";
+import { DryRunModal } from "@/components/DryRunModal";
 
 type TabId = "overview" | "logs" | "history" | "settings";
 
@@ -32,6 +33,9 @@ export default function SourceDetailPage({ params }: { params: Promise<{ id: str
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [testResults, setTestResults] = useState<Record<string, any>>({});
+  const [dryRunModalOpen, setDryRunModalOpen] = useState(false);
+  
+  console.log("Source page render - dryRunModalOpen:", dryRunModalOpen);
 
   const source = mockData.sources.find(s => s.id === resolvedParams.id) || mockData.sources[0];
   const recentRuns = mockData.runs.filter(r => r.sourceId === source.id);
@@ -106,7 +110,13 @@ export default function SourceDetailPage({ params }: { params: Promise<{ id: str
               <Play className="h-4 w-4" />
               Run Now
             </button>
-            <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+            <button 
+              onClick={() => {
+                console.log("Dry run button clicked");
+                setDryRunModalOpen(true);
+              }}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
               <TestTube2 className="h-4 w-4" />
               Dry Run
             </button>
@@ -150,6 +160,14 @@ export default function SourceDetailPage({ params }: { params: Promise<{ id: str
           {activeTab === "settings" && <SettingsTab source={source} />}
         </div>
       </div>
+
+      {/* Dry Run Modal - Now at the top level */}
+      <DryRunModal
+        isOpen={dryRunModalOpen}
+        onClose={() => setDryRunModalOpen(false)}
+        sourceName={source.name}
+        sourceId={source.id}
+      />
     </div>
   );
 }
