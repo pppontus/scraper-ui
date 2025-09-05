@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { SourceConfig } from "@/lib/types";
-import { DEFAULT_EXTRACTION_SCHEMA, FULL_JOB_SCHEMA, SchemaFieldConfig } from "../sources/wizard/constants";
+import mockData from "@/lib/mock-data.json";
+import { DEFAULT_EXTRACTION_SCHEMA, FULL_JOB_SCHEMA, SchemaFieldConfig, SYSTEM_DATABASE_FIELDS } from "../sources/wizard/constants";
 
 interface LLMConfigFormProps {
   config: SourceConfig;
@@ -19,6 +20,16 @@ export function LLMConfigForm({
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<any | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [showDbFields, setShowDbFields] = useState<boolean>(false);
+
+  // LLM models from mock data (single source of truth)
+  const llmModels: { id: string; label?: string; name?: string }[] =
+    (mockData as any)?.settings?.llmModels || [
+      { id: "gpt-4o", label: "GPT-4o ($2.50/$10.00)" },
+      { id: "gpt-4o-mini", label: "GPT-4o-mini ($0.15/$0.60)" },
+      { id: "claude-3-haiku", label: "Claude 3 Haiku ($0.25/$1.25)" },
+      { id: "claude-3-sonnet", label: "Claude 3.5 Sonnet ($3.00/$15.00)" },
+    ];
 
   // Use enhanced schema config or fallback to FULL_JOB_SCHEMA
   const schemaConfig = useMemo(() => 
@@ -26,7 +37,8 @@ export function LLMConfigForm({
     [llmConfig.schemaConfig]
   );
   
-  const fields = useMemo(() => Object.keys(schemaConfig), [schemaConfig]);
+  // Exclude system-managed URL from LLM schema table; shown in DB section below
+  const fields = useMemo(() => Object.keys(schemaConfig).filter(k => k !== 'detailsLink'), [schemaConfig]);
 
   const updateFieldConfig = (fieldKey: string, updates: Partial<SchemaFieldConfig>) => {
     const updatedSchemaConfig = {
@@ -132,14 +144,11 @@ export function LLMConfigForm({
           onChange={(e) => updateLLMConfig({ model: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-          <optgroup label="OpenAI GPT-4">
-            <option value="gpt-4o">GPT-4o ($2.50 / $10.00)</option>
-            <option value="gpt-4o-mini">GPT-4o-mini ($0.15 / $0.60)</option>
-          </optgroup>
-          <optgroup label="Anthropic Claude">
-            <option value="claude-3-haiku">Claude 3 Haiku ($0.25 / $1.25)</option>
-            <option value="claude-3-sonnet">Claude 3.5 Sonnet ($3.00 / $15.00)</option>
-          </optgroup>
+          {llmModels.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label || m.name || m.id}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -231,6 +240,45 @@ export function LLMConfigForm({
           <strong>Used:</strong> Include this field in the LLM output schema. 
           <strong>Mandatory:</strong> LLM must provide this field (validation will fail if missing).
         </p>
+      </div>
+
+      {/* Collapsible: System / Database Fields (hidden by default) */}
+      <div className="border rounded bg-white">
+        <button
+          type="button"
+          onClick={() => setShowDbFields(v => !v)}
+          className="w-full flex items-center justify-between px-4 py-3"
+        >
+          <span className="text-sm font-medium text-gray-700">Database Fields (auto-managed)</span>
+          <span className="text-xs text-gray-500">{showDbFields ? 'Hide' : 'Show'}</span>
+        </button>
+        {showDbFields && (
+          <div className="px-4 pb-4">
+            <p className="text-xs text-gray-500 mb-3">
+              These fields are populated by the system (no LLM parsing). Includes the original job URL and operational metadata.
+            </p>
+            <div className="bg-gray-50 rounded border p-3 overflow-x-auto">
+              <table className="w-full min-w-[720px]">
+                <thead>
+                  <tr className="border-b border-gray-300">
+                    <th className="text-left py-2 px-2 font-medium text-sm text-gray-700 w-40">Field</th>
+                    <th className="text-left py-2 px-2 font-medium text-sm text-gray-700 w-48">Type</th>
+                    <th className="text-left py-2 px-2 font-medium text-sm text-gray-700">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(SYSTEM_DATABASE_FIELDS).map(([key, def]) => (
+                    <tr key={key} className="border-b border-gray-200 hover:bg-white">
+                      <td className="py-2 px-2 font-medium text-sm text-gray-900">{key}</td>
+                      <td className="py-2 px-2 font-mono text-xs text-gray-600">{def.dataType}</td>
+                      <td className="py-2 px-2 text-sm text-gray-700">{def.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Preview (below) */}

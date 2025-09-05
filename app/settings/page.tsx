@@ -253,6 +253,16 @@ function NavigationTab({ settings }: any) {
 }
 
 function DefaultsTab({ settings }: any) {
+  const models: { id: string; label?: string; name?: string }[] = settings?.llmModels || [
+    { id: "gpt-5", label: "GPT-5 ($1.25/$10)" },
+    { id: "gpt-5-mini", label: "GPT-5 Mini ($0.25/$2) ⚡" },
+    { id: "gpt-5-nano", label: "GPT-5 Nano ($0.05/$0.40) ⚡" },
+    { id: "gpt-4o-2024-08-06", label: "GPT-4o (2024-08-06) ⚡" },
+    { id: "gpt-4o-mini", label: "GPT-4o Mini ⚡" },
+    { id: "gpt-4-turbo", label: "GPT-4 Turbo" },
+    { id: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
+    { id: "claude-3", label: "Claude 3" },
+  ];
   return (
     <div className="space-y-6">
       {/* LLM Defaults */}
@@ -271,14 +281,11 @@ function DefaultsTab({ settings }: any) {
                 defaultValue={settings.defaults.model}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               >
-                <option value="gpt-5">GPT-5 ($1.25/$10)</option>
-                <option value="gpt-5-mini">GPT-5 Mini ($0.25/$2) ⚡</option>
-                <option value="gpt-5-nano">GPT-5 Nano ($0.05/$0.40) ⚡</option>
-                <option value="gpt-4o-2024-08-06">GPT-4o (2024-08-06) ⚡</option>
-                <option value="gpt-4o-mini">GPT-4o Mini ⚡</option>
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="claude-3">Claude 3</option>
+                {models.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label || m.name || m.id}
+                  </option>
+                ))}
               </select>
             </div>
             <div>

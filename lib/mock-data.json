@@ -345,6 +345,16 @@
       "costCapWarning": 50,
       "costAlertEmail": "pontus@example.com"
     },
+    "llmModels": [
+      { "id": "gpt-5", "label": "GPT-5 ($1.25/$10)", "provider": "OpenAI" },
+      { "id": "gpt-5-mini", "label": "GPT-5 Mini ($0.25/$2) ⚡", "provider": "OpenAI" },
+      { "id": "gpt-5-nano", "label": "GPT-5 Nano ($0.05/$0.40) ⚡", "provider": "OpenAI" },
+      { "id": "gpt-4o-2024-08-06", "label": "GPT-4o (2024-08-06) ⚡", "provider": "OpenAI" },
+      { "id": "gpt-4o-mini", "label": "GPT-4o Mini ⚡", "provider": "OpenAI" },
+      { "id": "gpt-4-turbo", "label": "GPT-4 Turbo", "provider": "OpenAI" },
+      { "id": "gpt-3.5-turbo", "label": "GPT-3.5 Turbo", "provider": "OpenAI" },
+      { "id": "claude-3", "label": "Claude 3", "provider": "Anthropic" }
+    ],
     "auth": {
       "password": {
         "currentHash": "$2b$12$example_hash_for_ui_mockup_only",

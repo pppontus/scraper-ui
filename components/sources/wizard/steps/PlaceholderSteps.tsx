@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { formatTimestamp } from "@/lib/utils";
 import { Calendar, Clock, FileText, List, Link as LinkIcon, ChevronDown, ChevronRight, Code, Table as TableIcon, Eye, TestTube2 } from "lucide-react";
 import { DEFAULT_EXTRACTION_SCHEMA } from "../constants";
+import mockData from "@/lib/mock-data.json";
 import { useDryRun } from "../../../dry-run/useDryRun";
 import { DryRunResultsDisplay } from "../../../dry-run/DryRunResults";
 
@@ -20,6 +21,13 @@ export function LLMStep({ config, setConfig }: StepProps) {
 
   const schema = useMemo(() => llmConfig.extractionSchema || DEFAULT_EXTRACTION_SCHEMA, [llmConfig.extractionSchema]);
   const fields = useMemo(() => Object.keys(schema || {}), [schema]);
+  const llmModels: { id: string; label?: string; name?: string }[] =
+    (mockData as any)?.settings?.llmModels || [
+      { id: "gpt-4o", label: "GPT-4o ($2.50/$10.00)" },
+      { id: "gpt-4o-mini", label: "GPT-4o-mini ($0.15/$0.60)" },
+      { id: "claude-3-haiku", label: "Claude 3 Haiku ($0.25/$1.25)" },
+      { id: "claude-3-sonnet", label: "Claude 3.5 Sonnet ($3.00/$15.00)" },
+    ];
 
   const isRequired = (key: string) => {
     if (Array.isArray(llmConfig.requiredFields)) {
@@ -103,14 +111,11 @@ export function LLMStep({ config, setConfig }: StepProps) {
               onChange={(e) => updateLLMConfig({ model: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <optgroup label="OpenAI GPT-4">
-                <option value="gpt-4o">GPT-4o ($2.50 / $10.00)</option>
-                <option value="gpt-4o-mini">GPT-4o-mini ($0.15 / $0.60)</option>
-              </optgroup>
-              <optgroup label="Anthropic Claude">
-                <option value="claude-3-haiku">Claude 3 Haiku ($0.25 / $1.25)</option>
-                <option value="claude-3-sonnet">Claude 3.5 Sonnet ($3.00 / $15.00)</option>
-              </optgroup>
+              {llmModels.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label || m.name || m.id}
+                </option>
+              ))}
             </select>
           </div>
 
