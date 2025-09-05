@@ -37,8 +37,11 @@ export function LLMConfigForm({
     [llmConfig.schemaConfig]
   );
   
-  // Exclude system-managed URL from LLM schema table; shown in DB section below
-  const fields = useMemo(() => Object.keys(schemaConfig).filter(k => k !== 'detailsLink'), [schemaConfig]);
+  // Exclude system-managed fields from LLM schema table; shown in DB section below
+  const fields = useMemo(
+    () => Object.keys(schemaConfig).filter(k => k !== 'detailsLink' && k !== 'broker'),
+    [schemaConfig]
+  );
 
   const updateFieldConfig = (fieldKey: string, updates: Partial<SchemaFieldConfig>) => {
     const updatedSchemaConfig = {

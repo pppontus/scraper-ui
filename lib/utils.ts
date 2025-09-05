@@ -19,9 +19,9 @@ export function formatTimestamp(date: string | Date) {
 }
 
 export function formatCost(cost: number) {
-  return new Intl.NumberFormat(LOCALE, {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: CURRENCY,
+    currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(cost)
